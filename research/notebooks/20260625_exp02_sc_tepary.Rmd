@@ -1,0 +1,343 @@
+---
+title: "exp02: Tepary Stomatal Conductance"
+author: "Jua'nele Webb"
+date: "2026-07-07"
+output: html_document
+---
+
+## Overview
+
+### Goal
+
+Test whether stomatal conductance (SC) changes with meristem leaf
+position (M1–M3) differently across drought vs. watered tepary bean plants,
+and whether that relationship shifts across the Baseline → Treatment →
+Recovery timeline.
+
+### Inputs
+
+`exp02_tepary_SC1_20260625.csv` — one row per plant/date/leaf
+position, with meristem-position SC readings for 4 plants (Plant 1–4).
+Column 6 is stomatal conductance and is renamed `SC` for readability.
+
+### Design
+
+2 erect plants (Plant 1, Plant 2) and 2 climbing plants
+(Plant 3, Plant 4); within each architecture, one plant was droughted and
+one kept as a watered control (Plant 1 & 3 = drought, Plant 2 & 4 =
+control). Measurements span 6/25–7/2/2026:
+
+- **Baseline:** 6/25, 6/26
+- **Treatment (drought imposed):** 6/29
+- **Recovery:** 7/1, 7/2
+
+### Outputs
+
+1. A table of the 4 plants' architectural traits.
+2. `meristem_stage_plot` — SC vs. meristem position, faceted by architecture
+   and date, colored by experimental stage.
+3. A per-date, per-treatment regression of SC on meristem position (slope,
+   R², p-value, MSE), plus a scatter/trend view of the same relationship.
+4. R² and MSE trend lines over time, marking when drought begins.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(broom)
+library(knitr)
+
+# Load raw meristem SC data
+data <- read.csv("exp02_tepary_SC1_20260625.csv")
+
+# Quick inspection of the raw import
+names(data)
+head(data)
+dim(data)
+unique(data$Position)
+```
+
+## 1. Plant Architecture
+
+```{r architecture-table}
+# Build architecture summary table
+architecture <- data.frame(
+  Trait = c(
+    "Growth Habit", "Height", "Architecture", "Internodes",
+    "Branching", "Canopy", "Apical Dominance",
+    "Shoot Tip", "Lateral Growth",
+    "Support Needed"
+  ),
+  `Plant 1` = c(
+    "Erect", "Short", "Compact", "Short",
+    "High", "Compact", "Reduced",
+    "Damaged", "High", "No"
+  ),
+  `Plant 2` = c(
+    "Erect", "Medium", "Upright", "Long",
+    "Low", "Open", "Strong",
+    "Intact", "Low", "No"
+  ),
+  `Plant 3` = c(
+    "Climber", "Tall", "Vine-like", "Long",
+    "Moderate", "Open", "Reduced",
+    "Damaged", "High", "Yes"
+  ),
+  `Plant 4` = c(
+    "Climber", "Tall", "Vine-like", "Long",
+    "Moderate", "Moderate", "Strong",
+    "Intact", "Moderate", "Yes"
+  ),
+  check.names = FALSE  # keeps "Plant 1".."Plant 4" as the column headers
+                        # instead of R silently renaming them "Plant.1" etc.
+)
+
+kable(
+  architecture,
+  caption = "Architectural characteristics of four tepary bean plants."
+)
+```
+
+- **Plant 1:** Compact, erect, highly branched.
+- **Plant 2:** Upright with few branches and strong apical dominance.
+- **Plant 3:** Climbing plant with a damaged shoot tip and active lateral growth.
+- **Plant 4:** Climbing plant with an intact shoot tip and moderate branching.
+
+## 2. Data Cleaning & Labeling
+
+```{r data-cleaning}
+# Rename the raw stomatal-conductance column for readability
+names(data)[6] <- "SC"
+
+# Derive architecture, stage, treatment, and position labels
+data_clean <- data %>%
+  mutate(
+    Date = factor(
+      Date,
+      levels = c(
+        "6/25/2026", "6/26/2026", "6/29/2026",
+        "7/1/2026", "7/2/2026"
+      )  # chronological order, needed below for the trend-line plots
+    ),
+
+    SC = as.numeric(SC),
+
+    Architecture = case_when(
+      Plant_ID %in% c("Plant 1", "Plant 2") ~ "Erect",
+      Plant_ID %in% c("Plant 3", "Plant 4") ~ "Climber"
+    ),
+
+    # 3-phase timeline, used for the stage-colored meristem plot
+    Stage = case_when(
+      Date %in% c("6/25/2026", "6/26/2026") ~ "Baseline",
+      Date == "6/29/2026" ~ "Treatment",
+      Date %in% c("7/1/2026", "7/2/2026") ~ "Recovery"
+    ),
+    Stage = factor(Stage, levels = c("Baseline", "Treatment", "Recovery")),
+
+    # Baseline/Drought/Control grouping, used for the regression-by-treatment
+    # statistics — baseline dates are their own group regardless of plant,
+    # since drought hadn't been imposed yet.
+    Treatment = case_when(
+      Stage == "Baseline" ~ "Baseline",
+      Plant_ID %in% c("Plant 1", "Plant 3") ~ "Drought",
+      Plant_ID %in% c("Plant 2", "Plant 4") ~ "Control"
+    ),
+    Treatment = factor(Treatment, levels = c("Baseline", "Drought", "Control")),
+
+    Experimental_Group = case_when(
+      Plant_ID %in% c("Plant 1", "Plant 3") ~ "Drought",
+      Plant_ID %in% c("Plant 2", "Plant 4") ~ "Watered Control"
+    ),
+    Experimental_Group = factor(
+      Experimental_Group,
+      levels = c("Watered Control", "Drought")
+    ),
+
+    Leaf_Type = ifelse(grepl("^M", Position), "Meristem", "Lateral"),
+    Meristem_Position = case_when(
+      Position == "M1" ~ 1,
+      Position == "M2" ~ 2,
+      Position == "M3" ~ 3,
+      TRUE ~ NA_real_
+    )
+  )
+
+# Check assignments
+data_clean %>%
+  distinct(Date, Plant_ID, Architecture, Experimental_Group, Stage, Treatment) %>%
+  arrange(Date, Plant_ID)
+
+# Filter to meristem-position rows only
+meristem_data <- data_clean %>%
+  filter(
+    Leaf_Type == "Meristem",
+    !is.na(Stage),
+    !is.na(Treatment)
+  )
+```
+
+## 3. Meristem Position and Stomatal Conductance Across Experimental Stages
+
+```{r meristem-stage-plot, fig.width=9, fig.height=6}
+# Plot SC by position, stage, architecture
+meristem_stage_plot <- ggplot(
+  meristem_data,
+  aes(
+    x = Meristem_Position,
+    y = SC,
+    color = Stage,
+    shape = Experimental_Group,
+    linetype = Experimental_Group,
+    group = interaction(Plant_ID, Date)
+  )
+) +
+  geom_point(size = 3, alpha = 0.85) +
+  geom_smooth(
+    aes(group = interaction(Stage, Experimental_Group, Architecture, Date)),
+    method = "lm",
+    se = FALSE,
+    linewidth = 1
+  ) +
+  facet_grid(
+    Architecture ~ Date,
+    labeller = labeller(Date = function(x) format(as.Date(x, "%m/%d/%Y"), "%m/%d"))
+  ) +
+  scale_x_continuous(breaks = c(1, 2, 3), labels = c("M1", "M2", "M3")) +
+  scale_color_manual(
+    values = c(
+      "Baseline" = "#7570B3",
+      "Treatment" = "#D95F02",
+      "Recovery" = "#1B9E77"
+    )
+  ) +
+  labs(
+    title = "Meristem Position and Stomatal Conductance Across Experimental Stages",
+    subtitle = "Baseline: 6/25-6/26 | Treatment: 6/29 | Recovery: 7/1-7/2",
+    x = "Meristem Leaf Position",
+    y = expression("Stomatal Conductance (mmol " * m^-2 * " " * s^-1 * ")"),
+    color = "Experimental Stage",
+    shape = "Water Treatment",
+    linetype = "Water Treatment"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+meristem_stage_plot
+```
+
+## 4. Regression of SC on Meristem Position, by Date and Treatment
+
+For each date x treatment group, fits `SC ~ Meristem_Position` and reports
+the slope, R², p-value, and mean squared error (MSE).
+
+```{r regression-stats}
+# Fit regression per date and treatment
+stats_table <- meristem_data %>%
+  group_by(Date, Treatment) %>%
+  group_modify(~{
+    fit <- lm(SC ~ Meristem_Position, data = .x)
+    glance_out <- glance(fit)
+    coef_out <- tidy(fit)
+
+    tibble(
+      Slope = coef_out$estimate[2],
+      R2 = glance_out$r.squared,
+      P_value = coef_out$p.value[2],
+      MSE = mean(residuals(fit)^2)
+    )
+  }) %>%
+  ungroup()
+
+stats_table
+```
+
+```{r regression-scatter}
+# Plot SC vs position by treatment
+ggplot(
+  meristem_data,
+  aes(x = Meristem_Position, y = SC, color = Treatment)
+) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = TRUE) +
+  facet_wrap(~Date, labeller = labeller(Date = function(x) format(as.Date(x, "%m/%d/%Y"), "%m/%d"))) +
+  scale_x_continuous(breaks = c(1, 2, 3), labels = c("M1", "M2", "M3")) +
+  labs(
+    title = "Relationship Between Meristem Leaf Position and Stomatal Conductance",
+    subtitle = "Plants grouped by drought treatment",
+    x = "Meristem Leaf Position",
+    y = expression("Stomatal Conductance (mmol " * m^-2 * s^-1 * ")")
+  ) +
+  theme_classic()
+```
+
+## 5. R² and MSE Trends Over Time
+
+```{r r2-mse-trends}
+# Find x-position where drought begins
+drought_start_pos <- which(levels(stats_table$Date) == "6/29/2026")
+
+# Plot R-squared trend over time
+ggplot(
+  stats_table,
+  aes(x = Date, y = R2, color = Treatment, group = Treatment)
+) +
+  geom_point(size = 3) +
+  geom_line(linewidth = 1.2) +
+  geom_vline(xintercept = drought_start_pos, linetype = "dashed") +
+  annotate(
+    "text",
+    x = drought_start_pos,
+    y = max(stats_table$R2, na.rm = TRUE),
+    label = "Drought begins",
+    vjust = -0.5,
+    size = 3
+  ) +
+  labs(
+    title = "Change in R² Over Time",
+    subtitle = "R² shows how much stomatal conductance variation is explained by meristem position",
+    x = "Sampling Date",
+    y = expression(R^2),
+    color = "Condition"
+  ) +
+  theme_minimal()
+
+# Plot MSE trend over time
+ggplot(
+  stats_table,
+  aes(x = Date, y = MSE, color = Treatment, group = Treatment)
+) +
+  geom_point(size = 3) +
+  geom_line(linewidth = 1.2) +
+  geom_vline(xintercept = drought_start_pos, linetype = "dashed") +
+  annotate(
+    "text",
+    x = drought_start_pos,
+    y = max(stats_table$MSE, na.rm = TRUE),
+    label = "Drought begins",
+    vjust = -0.5,
+    size = 3
+  ) +
+  labs(
+    title = "Change in MSE Over Time",
+    subtitle = "MSE shows regression error between observed and predicted stomatal conductance",
+    x = "Sampling Date",
+    y = "Mean Squared Error",
+    color = "Condition"
+  ) +
+  theme_minimal()
+```
+
+## Limitations / Next Steps
+
+- Only one plant per architecture x treatment combination — as with Exp01,
+  treat regression results (slope/R²/p-value) as descriptive per plant
+  rather than as inferential statistics across a population.

@@ -1,0 +1,637 @@
+---
+title: "exp03: Hormone Effects on Leaf Age Patterns in Stomatal Conductance"
+author: "Jua'nele Webb"
+date: "2026-07-23"
+output: html_document
+---
+
+## Research Question
+
+Do IAA and paclobutrazol treatments alter the developmental distribution of
+stomatal conductance between the youngest and oldest leaves of tepary bean
+under well-watered and drought conditions?
+
+## Biological Question
+
+The analysis evaluates whether hormone treatments alter:
+
+1. overall stomatal conductance;
+2. developmental differences between youngest and oldest leaves;
+3. relative physiological performance under drought;
+4. the distribution of conductance toward younger or older tissues.
+
+## Hypotheses
+
+1. Youngest leaves will maintain greater stomatal conductance than oldest
+   leaves under drought.
+2. IAA may increase physiological support of younger leaves under drought.
+3. PAC may alter stomatal conductance through growth restriction and more
+   conservative water use.
+4. Hormone treatments may change the magnitude or direction of
+   developmental differences in stomatal conductance.
+
+## Overview
+
+### Inputs
+
+`exp03_hormone_tepary_SC1_20260716.csv`, one row per plant x
+date x leaf, with `Treatment` (Control/IAA/PAC), `Water_Status`
+(Well-watered/Drought), `Leaf_Age` (Oldest/Youngest), `Leaf_Status`
+(only "Healthy" rows are analyzed), and column 6 = stomatal conductance
+(renamed `SC`).
+
+### Outputs
+
+For each of five derived metrics — developmental gradient,
+developmental prioritization, drought retention, developmental plasticity,
+drought response, and developmental allocation — a summary table, a plot,
+and (where applicable) an ANOVA / Tukey HSD test.
+
+### Required Packages
+
+Beyond the tidyverse: `broom`, `patchwork`,
+`ggpubr`, `multcompView`, `ggsci`, `scales`. Install once with
+`install.packages(c("broom","patchwork","ggpubr","multcompView","ggsci","scales"))`
+if any `library()` call below fails — installation is left out of the
+knitted chunks so re-running this notebook doesn't try to reinstall
+packages every time.
+
+## Setup, Import, and Clean
+
+```{r setup}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(broom)
+library(patchwork)
+library(scales)
+library(multcompView)
+library(ggpubr)
+library(ggsci)
+
+# Load raw hormone SC data
+data <- read.csv("exp03_hormone_tepary_SC1_20260716.csv")
+
+names(data)[6] <- "SC"
+
+# Standardize factor levels and clean SC
+data <- data %>%
+  mutate(
+    Treatment = factor(Treatment, levels = c("Control", "IAA", "PAC")),
+    Water_Status = factor(Water_Status, levels = c("Well-watered", "Drought")),
+    Leaf_Age = factor(Leaf_Age, levels = c("Oldest", "Youngest")),
+    Leaf_Age = trimws(as.character(Leaf_Age)),
+    SC = as.numeric(gsub("[^0-9.-]", "", SC))
+  )
+```
+
+```{r clean-and-gradient}
+# Keep only healthy leaf measurements
+healthy_data <- data %>%
+  filter(Leaf_Status == "Healthy")
+
+# Pair youngest/oldest SC within each plant x date x treatment and compute the developmental gradient (Youngest - Oldest). Positive values mean higher conductance in the youngest leaf; negative means higher in the oldest leaf.
+gradient_data <- healthy_data %>%
+  select(Date, Plant_ID, Treatment, Water_Status, Leaf_Age, SC) %>%
+  pivot_wider(names_from = Leaf_Age, values_from = SC) %>%
+  mutate(Developmental_Gradient = Youngest - Oldest) %>%
+  drop_na(Oldest, Youngest, Developmental_Gradient)
+
+gradient_data
+```
+
+### Interpretation
+
+The data were cleaned by converting stomatal conductance to numeric values,
+standardizing leaf-age labels, and retaining only healthy leaves. Youngest
+and oldest leaf measurements were paired within each plant to calculate the
+developmental gradient:
+
+Youngest − Oldest stomatal conductance
+
+Positive values indicate higher conductance in the youngest leaf, while
+negative values indicate higher conductance in the oldest leaf.
+
+## Developmental Gradient by Hormone
+
+```{r gradient-by-hormone, fig.width=9, fig.height=5}
+# Subset to well-watered plants
+control_gradient <- gradient_data %>% filter(Water_Status == "Well-watered")
+
+# Summarize gradient stats for control
+control_summary <- control_gradient %>%
+  group_by(Treatment) %>%
+  summarise(
+    n = n(),
+    Mean_Gradient = mean(Developmental_Gradient, na.rm = TRUE),
+    SD = sd(Developmental_Gradient, na.rm = TRUE),
+    SE = SD / sqrt(n),
+    Median = median(Developmental_Gradient),
+    Minimum = min(Developmental_Gradient),
+    Maximum = max(Developmental_Gradient),
+    .groups = "drop"
+  )
+control_summary
+
+# Plot gradient by treatment, well-watered
+control_plot <- ggplot(
+  control_gradient,
+  aes(x = Treatment, y = Developmental_Gradient, fill = Treatment)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.7) +
+  geom_boxplot(alpha = 0.6, outlier.shape = NA, width = 0.65) +
+  geom_jitter(width = 0.10, size = 2.7) +
+  labs(
+    title = "Well-Watered",
+    x = "Hormone Treatment",
+    y = expression(Delta * " Stomatal Conductance\n(Youngest - Oldest)"),
+    fill = "Treatment"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10),
+    plot.margin = margin(8, 10, 8, 8)
+  )
+
+# Test treatment effect, well-watered group
+control_model <- aov(Developmental_Gradient ~ Treatment, data = control_gradient)
+summary(control_model)
+TukeyHSD(control_model)
+
+# Subset to drought plants
+drought_gradient <- gradient_data %>% filter(Water_Status == "Drought")
+
+# Summarize gradient stats for drought
+drought_summary <- drought_gradient %>%
+  group_by(Treatment) %>%
+  summarise(
+    n = n(),
+    Mean_Gradient = mean(Developmental_Gradient, na.rm = TRUE),
+    SD = sd(Developmental_Gradient, na.rm = TRUE),
+    SE = SD / sqrt(n),
+    Median = median(Developmental_Gradient, na.rm = TRUE),
+    Minimum = min(Developmental_Gradient, na.rm = TRUE),
+    Maximum = max(Developmental_Gradient, na.rm = TRUE),
+    .groups = "drop"
+  )
+drought_summary
+
+# Plot gradient by treatment, drought
+drought_plot <- ggplot(
+  drought_gradient,
+  aes(x = Treatment, y = Developmental_Gradient, fill = Treatment)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.7) +
+  geom_boxplot(alpha = 0.6, outlier.shape = NA, width = 0.65) +
+  geom_jitter(width = 0.10, size = 2.7) +
+  labs(title = "Drought", x = "Hormone Treatment", y = NULL, fill = "Treatment") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10),
+    plot.margin = margin(8, 8, 8, 10)
+  )
+
+# Test treatment effect, drought group
+drought_model <- aov(Developmental_Gradient ~ Treatment, data = drought_gradient)
+summary(drought_model)
+TukeyHSD(drought_model)
+
+# Combine control and drought plots
+combined_gradient_plot <-
+  (control_plot | drought_plot) +
+  plot_layout(guides = "collect", widths = c(1, 1)) +
+  plot_annotation(
+    title = "Developmental Gradient by Hormone Treatment in Tepary",
+    theme = theme(
+      plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(size = 12, hjust = 0.5)
+    )
+  ) &
+  theme(legend.position = "bottom")
+
+combined_gradient_plot
+```
+
+### Interpretation
+
+IAA showed the greatest positive gradient under well-watered conditions,
+while PAC showed the greatest positive gradient under drought. Due to
+PAC's inhibition of gibberellin biosynthesis, the maintenance of gas
+exchange throughout the stress treatment potentially infers greater water
+conservation.
+
+PAC observed with the reduced climber architecture demonstrated from
+PhenoSight RGB.
+
+## Developmental Prioritization, Relative Drought Performance, Developmental Plasticity
+
+```{r prioritization}
+# Normalized developmental prioritization index
+prioritization_data <- gradient_data %>%
+  mutate(Developmental_Prioritization = (Youngest - Oldest) / (Youngest + Oldest))
+
+# Print prioritization values per plant
+prioritization_data %>%
+  select(Plant_ID, Treatment, Water_Status, Oldest, Youngest, Developmental_Prioritization) %>%
+  print(n = Inf)
+
+# Summarize prioritization by treatment and water
+prioritization_summary <- prioritization_data %>%
+  group_by(Water_Status, Treatment) %>%
+  summarise(
+    n = n(),
+    Mean_Prioritization = mean(Developmental_Prioritization, na.rm = TRUE),
+    SD = sd(Developmental_Prioritization, na.rm = TRUE),
+    SE = SD / sqrt(n),
+    .groups = "drop"
+  )
+prioritization_summary
+
+# Plot prioritization index by treatment
+prioritization_plot <- ggplot(
+  prioritization_data,
+  aes(x = Treatment, y = Developmental_Prioritization, fill = Treatment)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.7) +
+  geom_boxplot(alpha = 0.65, outlier.shape = NA, width = 0.60) +
+  geom_jitter(width = 0.10, size = 2.8) +
+  facet_wrap(~Water_Status) +
+  labs(
+    title = "Developmental Prioritization of Stomatal Conductance",
+    x = "Hormone Treatment",
+    y = "Developmental Prioritization Index"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "none"
+  )
+prioritization_plot
+
+# Test treatment x water interaction
+prioritization_model <- aov(Developmental_Prioritization ~ Treatment * Water_Status, data = prioritization_data)
+summary(prioritization_model)
+```
+
+```{r drought-retention}
+# Compute drought retention percent by leaf age
+retention_data <- healthy_data %>%
+  group_by(Treatment, Leaf_Age, Water_Status) %>%
+  summarise(Mean_SC = mean(SC, na.rm = TRUE), SD_SC = sd(SC, na.rm = TRUE), n = n(), .groups = "drop") %>%
+  select(Treatment, Leaf_Age, Water_Status, Mean_SC) %>%
+  pivot_wider(names_from = Water_Status, values_from = Mean_SC) %>%
+  mutate(Drought_Retention_Percent = Drought / `Well-watered` * 100)
+
+retention_data
+
+# Plot drought retention by treatment
+retention_plot <- ggplot(
+  retention_data,
+  aes(x = Treatment, y = Drought_Retention_Percent, fill = Leaf_Age)
+) +
+  geom_hline(yintercept = 100, linetype = "dashed", linewidth = 0.7) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+  labs(
+    title = "Relative Drought Performance of Stomatal Conductance",
+    subtitle = "100% indicates equal mean stomatal conductance under drought and well-watered conditions",
+    x = "Hormone Treatment",
+    y = "Mean Drought Stomatal Conductance (% of Well-Watered)",
+    fill = "Leaf Age"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 11, hjust = 0.5),
+    axis.title = element_text(size = 12, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(size = 11, face = "bold"),
+    legend.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+retention_plot
+```
+
+```{r plasticity-data}
+# Compute absolute and relative plasticity
+plasticity_data <- gradient_data %>%
+  mutate(
+    Developmental_Plasticity = abs(Youngest - Oldest),
+    Relative_Plasticity = abs(Youngest - Oldest) / ((Youngest + Oldest) / 2)
+  )
+
+# Summarize plasticity by water and treatment
+plasticity_summary <- plasticity_data %>%
+  group_by(Water_Status, Treatment) %>%
+  summarise(
+    n = n(),
+    Mean_Absolute_Plasticity = mean(Developmental_Plasticity, na.rm = TRUE),
+    SD_Absolute_Plasticity = sd(Developmental_Plasticity, na.rm = TRUE),
+    Mean_Relative_Plasticity = mean(Relative_Plasticity, na.rm = TRUE),
+    SD_Relative_Plasticity = sd(Relative_Plasticity, na.rm = TRUE),
+    .groups = "drop"
+  )
+plasticity_summary
+
+# Test treatment x water interaction
+plasticity_model <- aov(Relative_Plasticity ~ Treatment * Water_Status, data = plasticity_data)
+summary(plasticity_model)
+```
+
+Now that we have ANOVA values, Tukey HSD shows which groups are actually
+significantly different from each other, split by water status:
+
+```{r plasticity-tukey}
+# Split plasticity data by water status
+control_pd <- subset(plasticity_data, Water_Status == "Well-watered")
+drought_pd <- subset(plasticity_data, Water_Status == "Drought")
+
+# Helper: get Tukey letters per group
+tukey_letters_for <- function(df, water_label) {
+  fit <- TukeyHSD(aov(Relative_Plasticity ~ Treatment, data = df))
+  p_adj <- fit$Treatment[, "p adj"]
+  letters_out <- multcompLetters(p_adj)
+  out <- as.data.frame(letters_out$Letters)
+  out$Treatment <- rownames(out)
+  colnames(out)[1] <- "Tukey"
+  out$Water_Status <- water_label
+  out
+}
+
+# Compute Tukey letters for both groups
+test_all <- rbind(
+  tukey_letters_for(control_pd, "Well-watered"),
+  tukey_letters_for(drought_pd, "Drought")
+)
+test_all
+
+# Reorder water status factor levels
+plasticity_data$Water_Status <- factor(plasticity_data$Water_Status, levels = c("Well-watered", "Drought"))
+test_all$Water_Status <- factor(test_all$Water_Status, levels = c("Well-watered", "Drought"))
+```
+
+```{r plasticity-plot, fig.width=8, fig.height=5}
+# Plot plasticity with significance labels
+plasticity_plot <- ggplot(
+  plasticity_data,
+  aes(x = Treatment, y = Relative_Plasticity, fill = Treatment)
+) +
+  geom_boxplot(alpha = 0.65, outlier.shape = NA, width = 0.60) +
+  geom_jitter(width = 0.10, size = 2.8) +
+  facet_wrap(~Water_Status) +
+  labs(
+    title = "Developmental Plasticity in Stomatal Conductance",
+    x = "Hormone Treatment",
+    y = "Relative Plasticity ((Y-O)/mean(Y,O))"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "none"
+  ) +
+  stat_compare_means(method = "anova", label.y = 1) +
+  stat_pvalue_manual(test_all, label = "Tukey", y.position = 0.85)
+
+plasticity_plot
+
+# Apply journal color palette
+plasticity_plot_NPG <- plasticity_plot + scale_fill_aaas()
+plasticity_plot_NPG
+```
+
+### Interpretation
+
+#### Developmental Prioritization
+
+PAC: highest mean prioritization index (0.142)
+IAA: slightly negative prioritization index (-0.039)
+
+#### Relative Drought Performance
+
+All treatments: reduced stomatal conductance under drought (<100%
+retention)
+IAA: greatest conductance in older leaves (78.7%)
+PAC: retained greatest conductance in the youngest leaf (61.7%)
+
+#### Developmental Plasticity
+
+PAC: highest relative plasticity (0.467)
+IAA: lowest relative plasticity (0.077)
+
+## Hormone Stomatal Conductance Response
+
+```{r drought-response, fig.width=8, fig.height=5}
+# Compute SC change under drought by age
+drought_response_data <- healthy_data %>%
+  group_by(Treatment, Leaf_Age, Water_Status) %>%
+  summarise(Mean_SC = mean(SC, na.rm = TRUE), SD_SC = sd(SC, na.rm = TRUE), n = n(), .groups = "drop") %>%
+  select(Treatment, Leaf_Age, Water_Status, Mean_SC) %>%
+  pivot_wider(names_from = Water_Status, values_from = Mean_SC) %>%
+  mutate(
+    Drought_Response = Drought - `Well-watered`,
+    Absolute_Decline = `Well-watered` - Drought
+  )
+
+drought_response_data
+
+# Plot drought response by treatment and age
+drought_response_plot <- ggplot(
+  drought_response_data,
+  aes(x = Treatment, y = Drought_Response, fill = Leaf_Age)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.7) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+  labs(
+    title = "Hormone-Specific Stomatal Conductance Response to Drought",
+    x = "Hormone Treatment",
+    y = expression(Delta * " Mean Stomatal Conductance (Drought - Well-Watered)"),
+    fill = "Leaf Age"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+drought_response_plot
+
+# Rank treatments by drought response
+drought_response_ranking <- drought_response_data %>%
+  arrange(Leaf_Age, desc(Drought_Response)) %>%
+  group_by(Leaf_Age) %>%
+  mutate(Response_Rank = row_number()) %>%
+  ungroup()
+
+drought_response_ranking
+```
+
+### Interpretation
+
+IAA: smallest decline in oldest (-6.62 mmol/m⁻² s⁻¹), but largest decline
+in youngest (-36.92 mmol/m⁻² s⁻¹)
+PAC: more balanced response across ages (-17.99 to -20.84 mmol/m⁻² s⁻¹)
+Control: more intermediate (-23.08 to -27.28 mmol/m⁻² s⁻¹)
+
+## Water Use Allocation Index
+
+```{r allocation-index, fig.width=9, fig.height=5}
+# Compute youngest-leaf share of conductance
+allocation_data <- gradient_data %>%
+  mutate(Developmental_Allocation_Index = Youngest / (Youngest + Oldest))
+
+# Print allocation index per plant
+allocation_data %>%
+  select(Plant_ID, Treatment, Water_Status, Oldest, Youngest, Developmental_Allocation_Index) %>%
+  print(n = Inf)
+
+# Summarize allocation by water and treatment
+allocation_summary <- allocation_data %>%
+  group_by(Water_Status, Treatment) %>%
+  summarise(
+    n = n(),
+    Mean_Allocation = mean(Developmental_Allocation_Index, na.rm = TRUE),
+    SD_Allocation = sd(Developmental_Allocation_Index, na.rm = TRUE),
+    SE_Allocation = SD_Allocation / sqrt(n),
+    Median_Allocation = median(Developmental_Allocation_Index, na.rm = TRUE),
+    .groups = "drop"
+  )
+allocation_summary
+
+# Overall interaction model
+allocation_model <- aov(Developmental_Allocation_Index ~ Treatment * Water_Status, data = allocation_data)
+summary(allocation_model)
+
+# Test ANOVA and Tukey by water status
+allocation_well_watered_model <- aov(
+  Developmental_Allocation_Index ~ Treatment,
+  data = allocation_data %>% filter(Water_Status == "Well-watered")
+)
+summary(allocation_well_watered_model)
+TukeyHSD(allocation_well_watered_model)
+
+allocation_drought_model <- aov(
+  Developmental_Allocation_Index ~ Treatment,
+  data = allocation_data %>% filter(Water_Status == "Drought")
+)
+summary(allocation_drought_model)
+TukeyHSD(allocation_drought_model)
+
+# Helper: compute Tukey letters for one group
+get_allocation_letters <- function(df) {
+  model <- aov(Developmental_Allocation_Index ~ Treatment, data = df)
+  tukey_results <- TukeyHSD(model)
+  adjusted_p_values <- tukey_results$Treatment[, "p adj"]
+  letter_results <- multcompLetters(adjusted_p_values)$Letters
+
+  data.frame(Treatment = names(letter_results), Tukey_Letter = unname(letter_results))
+}
+
+# Get Tukey letters per water status
+allocation_letters <- allocation_data %>%
+  group_by(Water_Status) %>%
+  group_modify(~ get_allocation_letters(.x)) %>%
+  ungroup() %>%
+  mutate(
+    Treatment = factor(Treatment, levels = c("Control", "IAA", "PAC")),
+    Water_Status = factor(Water_Status, levels = c("Well-watered", "Drought"))
+  )
+allocation_letters
+
+# Compute label y-position per group
+allocation_letter_positions <- allocation_data %>%
+  group_by(Water_Status, Treatment) %>%
+  summarise(Letter_Position = max(Developmental_Allocation_Index, na.rm = TRUE) + 0.035, .groups = "drop") %>%
+  left_join(allocation_letters, by = c("Water_Status", "Treatment"))
+allocation_letter_positions
+
+# Compute ANOVA p-value label per panel
+allocation_anova_labels <- allocation_data %>%
+  group_by(Water_Status) %>%
+  group_modify(~{
+    panel_model <- aov(Developmental_Allocation_Index ~ Treatment, data = .x)
+    panel_p_value <- summary(panel_model)[[1]]["Treatment", "Pr(>F)"]
+    data.frame(ANOVA_Label = paste0("ANOVA, p = ", format.pval(panel_p_value, digits = 2, eps = 0.001)))
+  }) %>%
+  ungroup() %>%
+  mutate(
+    Water_Status = factor(Water_Status, levels = c("Well-watered", "Drought")),
+    x_position = 1,
+    y_position = 0.86
+  )
+allocation_anova_labels
+
+# Plot allocation index with significance labels
+allocation_plot <- ggplot(
+  allocation_data,
+  aes(x = Treatment, y = Developmental_Allocation_Index, fill = Treatment)
+) +
+  geom_hline(yintercept = 0.50, linetype = "dashed", linewidth = 0.7) +
+  geom_boxplot(alpha = 0.65, outlier.shape = NA, width = 0.60) +
+  geom_jitter(width = 0.10, size = 2.8) +
+  facet_wrap(~Water_Status) +
+  geom_text(
+    data = allocation_letter_positions,
+    aes(x = Treatment, y = Letter_Position, label = Tukey_Letter),
+    inherit.aes = FALSE, size = 5
+  ) +
+  geom_text(
+    data = allocation_anova_labels,
+    aes(x = x_position, y = y_position, label = ANOVA_Label),
+    inherit.aes = FALSE, hjust = 0, size = 4.5
+  ) +
+  labs(
+    title = "Developmental Allocation of Stomatal Conductance",
+    x = "Hormone Treatment",
+    y = "Youngest Leaf Share of Combined Conductance"
+  ) +
+  scale_y_continuous(
+    labels = label_percent(accuracy = 1),
+    breaks = seq(0.4, 0.9, by = 0.1),
+    limits = c(0.4, 0.9),
+    expand = expansion(mult = c(0.01, 0.01))
+  ) +
+  coord_cartesian(clip = "off") +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    strip.text = element_text(size = 11, face = "bold"),
+    legend.position = "none",
+    plot.margin = margin(10, 15, 10, 10)
+  )
+
+allocation_plot
+
+# Apply journal color palette
+allocation_plot_NPG <- allocation_plot + scale_fill_aaas()
+allocation_plot_NPG
+```
+
+### Interpretation
+
+Allocation Index measures stomatal conductance distributed between older
+and younger leaves. Values above 50% indicate greater allocation to
+youngest leaf, while values below 50% indicate greater allocation to older
+leaves.
+
+PAC: maintained highest allocation to the youngest leaf with 57.1% mean
+allocation
+IAA: shifted towards greater allocation in older leaves with 48.1% mean
+allocation
+
+## Limitations / Next Steps
+
+- No pre-treatment baseline or post-drought recovery measurements — drought
+  and well-watered plants are independent groups, not repeated measures on
+  the same plants.

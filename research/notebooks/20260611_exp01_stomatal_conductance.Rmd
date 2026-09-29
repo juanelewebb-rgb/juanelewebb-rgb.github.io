@@ -1,0 +1,219 @@
+---
+title: 'Exp01: Pilot Soybean Stomatal Conductance Analysis'
+author: "Jua'nele Webb"
+date: "2026-06-24"
+output: html_document
+---
+
+## Overview
+
+### Goal
+
+Pilot test of whether leaf age (position on the stem) affects how
+much stomatal conductance drops under drought, comparing one droughted
+soybean plant to one well-watered control.
+
+### Inputs
+
+`experiment_01.csv`, with columns `Date`, `Leaf_Position`,
+`Plant_ID` (`Soybean01_drought` / `Soybean02_control`), and
+`Stomatal_Conductance_mmol_m2_s`. Measurements were taken with an SC-1
+porometer on 6/11/2026 and 6/15/2026 across multiple leaf positions per
+plant (higher position number = younger leaf).
+
+### Design Note
+
+This is a pilot/proof-of-concept run with n = 1 plant per
+treatment group (one drought, one well-watered), not a replicated
+experiment. Treat results as hypothesis-generating rather than conclusive
+(see Conclusion below).
+
+### Outputs
+
+1. A bar chart of percent reduction in conductance (drought vs. control) by
+   leaf position on 6/15/2026, with the underlying values and summary stats.
+2. A line/point chart comparing conductance across leaf positions and dates
+   for both plants, with treatment-and-date means.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Load raw stomatal conductance data
+data <- read.csv("experiment_01.csv")
+```
+
+## Experiment Window: Gas Exchange vs Leaf Position (06/11/2026-06/15/2026)
+
+### 1. Percent Reduction Relative to Well-Watered Control
+
+Compares the drought soybean plant to the well-watered control on
+6/15/2026, using:
+
+Percent Reduction = ((Control − Drought) / Control) × 100
+
+#### Code
+
+```{r percent-reduction-615}
+# Reshape data and compute percent reduction
+comparison_615 <- data %>%
+  filter(Date == "6/15/2026") %>%
+  select(
+    Leaf_Position,
+    Plant_ID,
+    Stomatal_Conductance_mmol_m2_s
+  ) %>%
+  pivot_wider(
+    names_from = Plant_ID,
+    values_from = Stomatal_Conductance_mmol_m2_s
+  ) %>%
+  mutate(
+    Percent_Reduction =
+      ((Soybean02_control - Soybean01_drought) /
+         Soybean02_control) * 100
+  )
+
+# Plot percent reduction by leaf position
+ggplot(
+  comparison_615,
+  aes(
+    x = factor(Leaf_Position),
+    y = Percent_Reduction
+  )
+) +
+  geom_col(fill = "steelblue") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(
+    title = "Percent Reduction Relative to Well-Watered Control on 6/15/2026",
+    x = "Leaf Position",
+    y = "Percent Reduction (%)"
+  ) +
+  theme_minimal()
+```
+
+#### Values Used in Graph
+
+```{r percent-reduction-table}
+# Print percent reduction values per leaf position
+comparison_615 %>%
+  select(Leaf_Position, Percent_Reduction) %>%
+  print(n = Inf)
+```
+
+#### Mean Percent Reduction Statistics
+
+```{r percent-reduction-summary}
+# Compute mean and SD of reduction
+comparison_615 %>%
+  summarise(
+    Mean_Reduction = mean(Percent_Reduction, na.rm = TRUE),
+    SD = sd(Percent_Reduction, na.rm = TRUE)
+  )
+```
+
+#### Interpretation
+
+The average reduction in stomatal conductance across leaf positions was
+38.6% relative to the well-watered control. The magnitude of reduction
+varied among leaf positions (SD = 23.7%). One leaf position (leaf 4)
+deviated from the overall trend; however, the corresponding control leaf
+displayed visible disease symptoms, which may have influenced the
+measurement. The magnitude of reduction varied with leaf position, ranging
+from approximately 17% to 63%, suggesting that different-aged leaves
+responded differently to water limitation. The strongest reductions
+occurred in leaf positions 6–10, where conductance was approximately
+50–63% lower than the control. Lower leaf positions generally exhibited
+smaller reductions.
+
+### 2. Comparison of Stomatal Conductance Across Leaf Positions
+
+Compares stomatal conductance of the drought-treated and well-watered
+soybean plants across leaf positions on 6/11/2026 and 6/15/2026. Each point
+represents an individual plant.
+
+#### Code
+
+```{r comparison-graph}
+# Plot conductance across leaf positions and dates
+ggplot(
+  data,
+  aes(
+    x = Leaf_Position,
+    y = Stomatal_Conductance_mmol_m2_s,
+    color = Plant_ID,
+    group = Plant_ID
+  )
+) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_wrap(~Date) +
+  scale_color_manual(
+    name = "Treatment",
+    values = c(
+      "Soybean01_drought" = "lightblue",
+      "Soybean02_control" = "steelblue"
+    ),
+    labels = c(
+      "Drought",
+      "Well-watered Control"
+    )
+  ) +
+  labs(
+    title = "Comparing Stomatal Conductance Across Leaf Positions in Droughted and Well-Watered Soybeans",
+    subtitle = "Higher leaf position numbers correspond to younger leaves",
+    x = "Leaf Position",
+    y = "Stomatal Conductance (mmol m⁻² s⁻¹)"
+  )
+```
+
+#### Mean Stomatal Conductance by Treatment and Date
+
+```{r sc-by-treatment-date}
+# Summarize mean conductance by date and plant
+data %>%
+  group_by(Date, Plant_ID) %>%
+  summarise(
+    Mean = mean(Stomatal_Conductance_mmol_m2_s, na.rm = TRUE),
+    SD = sd(Stomatal_Conductance_mmol_m2_s, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+#### Leaf Positions with the Largest Drought-Induced Reduction
+
+```{r max-reduction}
+# Rank leaf positions by reduction size
+comparison_615 %>%
+  arrange(desc(Percent_Reduction))
+```
+
+#### Interpretation
+
+Mean stomatal conductance decreased from 69.4 to 56.4 mmol m⁻² s⁻¹ in the
+drought-treated plant between sampling dates. Mean stomatal conductance
+increased from 52.6 to 97.0 mmol m⁻² s⁻¹ in the well-watered control.
+
+## Conclusion
+
+Tool used: SC-1.
+
+Pilot experiment has perceived relativity to proposal's anticipated result:
+younger leaves may maintain higher stomatal conductivity under drought
+stress. Leading to the result: leaf age may influence stomatal conductance
+and further WUE, but data set was too small (one droughted, one watered,
+one conductivity measurement) and leaf variation was too wide to be
+certain. A clear age-related trend was difficult to note. Additional
+replication needed.
+
+## Limitations / Next Steps
+
+- n = 1 plant per treatment group — no statistical test is valid at this
+  sample size; percent-reduction values should be read as descriptive only.
+- Leaf 4's control showed visible disease symptoms, a likely confound for
+  that data point specifically.
+- Needs replication (more plants per treatment) before drawing conclusions
+  about leaf-age effects on drought response, which is picked up in
+  `exp02_sc_tepary.Rmd` onward.

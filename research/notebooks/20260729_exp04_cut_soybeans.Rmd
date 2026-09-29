@@ -1,0 +1,477 @@
+---
+title: 'exp04: Stomatal Conductance Analysis for Compact and Erect Soybeans'
+author: "Jua'nele Webb"
+date: "2026-08-02"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Overview
+
+### Goal
+
+Test whether decapitating the shoot apical meristem (forcing a
+more compact architecture) changes how soybean stomatal conductance
+responds to drought over time, compared to intact ("Erect") plants —
+looking at the highest and lowest mature meristem positions separately.
+
+### Inputs
+
+`exp04_cut_soybeans_sc1_20260729.csv` — one row per plant x
+date, with `Cut_Status` (Cut = decapitated/"Compact", Intact = "Erect"),
+`Water_Status` (Watered/Drought), `Day` (Day 1-3), and separate SC columns
+for the lowest and highest mature meristem (`Lowest_Mature_Meristem_SC`,
+`Highest_Mature_Meristem_SC`), pivoted here into one `SC` column tagged by
+`Mature_Position`.
+
+### Outputs
+
+1. `trajectory_plot` — mean SC over sampling day, by architecture, faceted
+   by water status x mature position, with a per-panel ANOVA p-value for
+   the architecture effect. Saved to `trajectory_plot_NPG.png` / `.pdf`.
+2. `drought_penalty_plot` — drought-vs-watered SC difference over time, by
+   architecture and mature position.
+3. `stability_plot` — coefficient of variation in SC across dates, as a
+   measure of temporal stability.
+4. `architecture_position_plot` — interaction between architecture and
+   mature position.
+5. `redistribution_plot` plus a mixed-effects model (`redistribution_model`)
+   of how SC is redistributed between the highest and lowest mature
+   positions over time.
+
+### Required Packages
+
+Beyond the tidyverse: `broom`, `scales`, `ggsci`,
+`lme4`, `lmerTest`. Install once with
+`install.packages(c("broom","scales","ggsci","lme4","lmerTest"))` if any
+`library()` call below fails.
+
+## 1. Import and Clean
+
+```{r setup}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(broom)
+library(ggsci)
+library(lme4)
+library(lmerTest)
+
+# Load raw cut-soybean SC data
+data <- read.csv(
+  "exp04_cut_soybeans_sc1_20260729.csv",
+  check.names = FALSE
+)
+
+# Inspect the original dataset
+names(data)
+head(data)
+str(data)
+
+# Standardize architecture, water status, and day
+data_clean <- data %>%
+  mutate(
+    Date = as.Date(Date, format = "%m/%d/%Y"),
+
+    Architecture = case_when(
+      Cut_Status == "Cut" ~ "Compact",
+      Cut_Status == "Intact" ~ "Erect",
+      TRUE ~ NA_character_
+    ),
+    Architecture = factor(Architecture, levels = c("Erect", "Compact")),
+
+    Water_Status = factor(Water_Status, levels = c("Watered", "Drought")),
+    Plant_ID = factor(Plant_ID),
+
+    Day = factor(Day, levels = c("Day 1", "Day 2", "Day 3"))
+  )
+
+# One row per plant, date, position
+analysis_data <- data_clean %>%
+  pivot_longer(
+    cols = c(Lowest_Mature_Meristem_SC, Highest_Mature_Meristem_SC),
+    names_to = "Mature_Position",
+    values_to = "SC"
+  ) %>%
+  mutate(
+    Mature_Position = recode(
+      Mature_Position,
+      "Lowest_Mature_Meristem_SC" = "Lowest Mature",
+      "Highest_Mature_Meristem_SC" = "Highest Mature"
+    ),
+    Mature_Position = factor(Mature_Position, levels = c("Lowest Mature", "Highest Mature")),
+    SC = as.numeric(gsub("[^0-9.-]", "", SC))
+  )
+
+# Confirm 4a and 4b remain
+analysis_data %>%
+  filter(Plant_ID %in% c("4a", "4b")) %>%
+  arrange(Plant_ID, Date, Mature_Position)
+
+# Check sample sizes
+analysis_data %>%
+  count(Date, Architecture, Water_Status, Mature_Position)
+
+# Check for missing values
+analysis_data %>%
+  filter(is.na(SC))
+```
+
+## 2. Trajectory Analysis
+
+Mean SC over sampling day, by architecture, faceted by water status x
+mature position, testing the architecture effect within each panel.
+
+```{r trajectory-summary}
+# Summarize mean SC by day and architecture
+trajectory_summary <- analysis_data %>%
+  group_by(Day, Architecture, Water_Status, Mature_Position) %>%
+  summarise(
+    n = sum(!is.na(SC)),
+    Mean_SC = mean(SC, na.rm = TRUE),
+    SD_SC = sd(SC, na.rm = TRUE),
+    SE_SC = SD_SC / sqrt(n),
+    .groups = "drop"
+  )
+
+trajectory_summary
+```
+
+```{r trajectory-anova}
+# Test architecture effect within each panel
+trajectory_anova <- analysis_data %>%
+  filter(!is.na(SC), !is.na(Architecture), !is.na(Day), !is.na(Water_Status), !is.na(Mature_Position)) %>%
+  group_by(Water_Status, Mature_Position) %>%
+  group_modify(~{
+    panel_data <- droplevels(.x)
+    panel_model <- aov(SC ~ Architecture * Day, data = panel_data)
+    model_results <- broom::tidy(panel_model)
+    architecture_result <- model_results %>% filter(term == "Architecture")
+    data.frame(Architecture_p = architecture_result$p.value)
+  }) %>%
+  ungroup()
+
+trajectory_anova
+```
+
+```{r trajectory-plot, fig.width=8, fig.height=6}
+# Find max SC per panel for labels
+panel_maximums <- trajectory_summary %>%
+  group_by(Water_Status, Mature_Position) %>%
+  summarise(Panel_Maximum = max(Mean_SC + SE_SC, na.rm = TRUE), .groups = "drop")
+
+# Build ANOVA label position and text
+trajectory_anova_labels <- trajectory_anova %>%
+  left_join(panel_maximums, by = c("Water_Status", "Mature_Position")) %>%
+  mutate(
+    ANOVA_Label = paste0("ANOVA, p = ", format.pval(Architecture_p, digits = 3, eps = 0.001)),
+    x_position = 1,
+    y_position = Panel_Maximum + 0.12 * max(trajectory_summary$Mean_SC + trajectory_summary$SE_SC, na.rm = TRUE)
+  )
+
+trajectory_anova_labels
+
+# Plot SC trajectory by architecture
+trajectory_plot <- ggplot(
+  trajectory_summary,
+  aes(x = Day, y = Mean_SC, color = Architecture, group = Architecture)
+) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = Mean_SC - SE_SC, ymax = Mean_SC + SE_SC), width = 0.08, linewidth = 0.7) +
+  geom_text(
+    data = trajectory_anova_labels,
+    aes(x = x_position, y = y_position, label = ANOVA_Label),
+    inherit.aes = FALSE, hjust = 0, size = 3.6
+  ) +
+  facet_grid(Water_Status ~ Mature_Position) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.25))) +
+  labs(
+    x = "Sampling Day",
+    y = expression("Stomatal Conductance (mmol " * m^-2 * " " * s^-1 * ")"),
+    color = "Architecture"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    strip.text = element_text(size = 11, face = "bold"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10, color = "black"),
+    legend.position = "bottom",
+    legend.title = element_text(size = 9, face = "bold"),
+    legend.text = element_text(size = 8),
+    panel.spacing = unit(0.8, "lines")
+  )
+
+trajectory_plot
+
+# Apply journal color palette
+trajectory_plot_NPG <- trajectory_plot +
+  scale_color_npg() +
+  theme(legend.position = "bottom", legend.title = element_text(face = "bold"), legend.text = element_text(size = 9))
+
+trajectory_plot_NPG
+
+# Save trajectory plot as PNG and PDF
+ggsave("trajectory_plot_NPG.png", trajectory_plot_NPG, width = 8, height = 6, units = "in", dpi = 600, bg = "white")
+ggsave("trajectory_plot_NPG.pdf", trajectory_plot_NPG, width = 8, height = 6, units = "in", device = cairo_pdf, bg = "white")
+```
+
+### Spot check: Watered x Lowest Mature panel
+
+`trajectory_anova` above already fits `SC ~ Architecture * Day` for every
+Water Status x Mature Position panel — this just prints the full model
+summary for one panel (Watered, Lowest Mature) as a sanity check on that
+number.
+
+```{r spot-check-panel}
+# Filter to one panel for spot check
+panel_check <- analysis_data %>%
+  filter(Water_Status == "Watered", Mature_Position == "Lowest Mature") %>%
+  droplevels()
+
+table(panel_check$Architecture, panel_check$Day)
+
+# Fit architecture x day model
+panel_model <- aov(SC ~ Architecture * Day, data = panel_check)
+summary(panel_model)
+```
+
+### Interpretation
+
+This graph shows whether compact and erect plants maintained stomatal
+conductance differently over time. It also distinguishes watered and
+droughted plants and the highest and lowest mature positions.
+
+## 3. Drought Penalty
+
+```{r drought-penalty, fig.width=8, fig.height=5}
+# Summarize mean SC by treatment and date
+penalty_summary <- analysis_data %>%
+  group_by(Date, Architecture, Mature_Position, Water_Status) %>%
+  summarise(
+    n = sum(!is.na(SC)),
+    Mean_SC = mean(SC, na.rm = TRUE),
+    SD_SC = sd(SC, na.rm = TRUE),
+    SE_SC = SD_SC / sqrt(n),
+    .groups = "drop"
+  )
+
+# Compute drought penalty vs watered mean
+drought_penalty_data <- penalty_summary %>%
+  select(Date, Architecture, Mature_Position, Water_Status, Mean_SC, SE_SC) %>%
+  pivot_wider(names_from = Water_Status, values_from = c(Mean_SC, SE_SC)) %>%
+  mutate(
+    Drought_Penalty = Mean_SC_Drought - Mean_SC_Watered,
+    Penalty_SE = sqrt(SE_SC_Drought^2 + SE_SC_Watered^2)
+  )
+
+drought_penalty_data
+
+# Plot drought penalty over time
+drought_penalty_plot <- ggplot(
+  drought_penalty_data,
+  aes(
+    x = Date, y = Drought_Penalty, color = Architecture,
+    linetype = Mature_Position, shape = Mature_Position,
+    group = interaction(Architecture, Mature_Position)
+  )
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.7) +
+  geom_errorbar(aes(ymin = Drought_Penalty - Penalty_SE, ymax = Drought_Penalty + Penalty_SE), width = 0.08, linewidth = 0.6, alpha = 0.75) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3.2) +
+  scale_x_date(date_labels = "%m/%d", date_breaks = "1 day") +
+  labs(
+    title = "Architecture Effects on Drought Penalty Across Shoot Positions",
+    subtitle = "Drought penalty = drought mean - corresponding watered mean",
+    x = "Date",
+    y = expression(Delta * " Mean Stomatal Conductance (Drought - Watered)"),
+    color = "Architecture",
+    linetype = "Mature Position",
+    shape = "Mature Position"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+drought_penalty_plot
+```
+
+## 4. Stability
+
+```{r stability, fig.width=8, fig.height=5}
+# Compute coefficient of variation per plant
+stability_data <- analysis_data %>%
+  group_by(Plant_ID, Architecture, Water_Status, Mature_Position) %>%
+  summarise(
+    n_dates = sum(!is.na(SC)),
+    Mean_SC = mean(SC, na.rm = TRUE),
+    SD_SC = sd(SC, na.rm = TRUE),
+    CV_SC = SD_SC / Mean_SC,
+    SC_Range = max(SC, na.rm = TRUE) - min(SC, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(n_dates >= 2, is.finite(CV_SC))
+
+# Summarize CV by architecture and treatment
+stability_summary <- stability_data %>%
+  group_by(Architecture, Water_Status, Mature_Position) %>%
+  summarise(n = n(), Mean_CV = mean(CV_SC, na.rm = TRUE), SD_CV = sd(CV_SC, na.rm = TRUE), SE_CV = SD_CV / sqrt(n), .groups = "drop")
+
+stability_summary
+
+# Plot CV by architecture and treatment
+stability_plot <- ggplot(
+  stability_data,
+  aes(x = Architecture, y = CV_SC, fill = Water_Status)
+) +
+  geom_boxplot(position = position_dodge(width = 0.75), width = 0.62, alpha = 0.65, outlier.shape = NA) +
+  geom_point(
+    aes(shape = Mature_Position),
+    position = position_jitterdodge(jitter.width = 0.10, dodge.width = 0.75),
+    size = 2.8, alpha = 0.85
+  ) +
+  labs(
+    title = "Temporal Stability of Stomatal Conductance by Architecture",
+    subtitle = "Lower coefficients of variation indicate greater stability across dates",
+    x = "Architecture",
+    y = "Coefficient of Variation Across Dates",
+    fill = "Water Status",
+    shape = "Mature Position"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+stability_plot
+```
+
+### Interpretation
+
+Lower variability indicates more stable conductance over time. This should
+be interpreted with the trajectory graph because a consistently low
+conductance value can also produce low variability.
+
+## 5. Architecture x Mature-Position Interaction
+
+```{r interaction-plot, fig.width=9, fig.height=5}
+# Summarize mean SC by position and date
+interaction_summary <- analysis_data %>%
+  group_by(Date, Architecture, Water_Status, Mature_Position) %>%
+  summarise(
+    n = sum(!is.na(SC)),
+    Mean_SC = mean(SC, na.rm = TRUE),
+    SD_SC = sd(SC, na.rm = TRUE),
+    SE_SC = SD_SC / sqrt(n),
+    .groups = "drop"
+  )
+
+# Plot architecture x position interaction
+architecture_position_plot <- ggplot(
+  interaction_summary,
+  aes(
+    x = Mature_Position, y = Mean_SC, color = Architecture,
+    linetype = Water_Status, shape = Water_Status,
+    group = interaction(Architecture, Water_Status)
+  )
+) +
+  geom_line(linewidth = 1.1, position = position_dodge(width = 0.10)) +
+  geom_point(size = 3.2, position = position_dodge(width = 0.10)) +
+  geom_errorbar(aes(ymin = Mean_SC - SE_SC, ymax = Mean_SC + SE_SC), width = 0.08, linewidth = 0.7, position = position_dodge(width = 0.10)) +
+  facet_wrap(~Date, nrow = 1, labeller = labeller(Date = function(x) format(as.Date(x), "%m/%d"))) +
+  labs(
+    title = "Interaction Between Shoot Architecture and Mature Position",
+    subtitle = "Nonparallel lines suggest architecture affects shoot positions differently",
+    x = "Mature Meristem Position",
+    y = expression("Mean Stomatal Conductance (mmol " * m^-2 * " " * s^-1 * ")"),
+    color = "Architecture",
+    linetype = "Water Status",
+    shape = "Water Status"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    strip.text = element_text(size = 11, face = "bold"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+architecture_position_plot
+```
+
+## 6. Developmental Redistribution Between Mature Positions
+
+```{r redistribution, fig.width=8, fig.height=5}
+# Compute SC difference between positions
+redistribution_data <- data_clean %>%
+  mutate(Delta_SC = Highest_Mature_Meristem_SC - Lowest_Mature_Meristem_SC)
+
+# Summarize redistribution by architecture and date
+redistribution_summary <- redistribution_data %>%
+  group_by(Date, Architecture, Water_Status) %>%
+  summarise(n = n(), Mean_Delta = mean(Delta_SC, na.rm = TRUE), SD_Delta = sd(Delta_SC, na.rm = TRUE), SE_Delta = SD_Delta / sqrt(n), .groups = "drop")
+
+redistribution_summary
+
+# Plot redistribution trend over time
+redistribution_plot <- ggplot(
+  redistribution_summary,
+  aes(x = Date, y = Mean_Delta, color = Architecture, group = Architecture)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.7) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = Mean_Delta - SE_Delta, ymax = Mean_Delta + SE_Delta), width = 0.08) +
+  facet_wrap(~Water_Status) +
+  scale_x_date(date_labels = "%m/%d", date_breaks = "1 day") +
+  labs(
+    title = "Developmental Redistribution of Stomatal Conductance",
+    subtitle = "Positive values indicate greater conductance in the highest mature meristem",
+    x = "Date",
+    y = expression(Delta * " Stomatal Conductance (Highest - Lowest)"),
+    color = "Architecture"
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+redistribution_plot
+```
+
+```{r redistribution-model}
+# Fit mixed model of redistribution over time
+redistribution_model <- lmer(
+  Delta_SC ~ Architecture * Water_Status * Date + (1 | Plant_ID),
+  data = redistribution_data
+)
+
+anova(redistribution_model)
+```
+
+## Limitations / Next Steps
+
+- Sample size per Architecture x Water Status combination is small (a
+  handful of plants, e.g. "4a"/"4b" sub-replicates) — treat panel-specific
+  ANOVA p-values as suggestive rather than confirmatory.
+- `redistribution_model` treats `Date` as a continuous predictor in a
+  3-way interaction with a random intercept for `Plant_ID`; with only 3
+  sampling days this estimates a linear trend over time rather than
+  day-specific effects — worth revisiting if more timepoints are added.

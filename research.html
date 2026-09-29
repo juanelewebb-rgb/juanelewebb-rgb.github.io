@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research · Jua'nele Webb</title>
+  <meta name="description" content="Engineering Drought Resilience Through Plant Architecture: BTI REU 2026 research by Jua'nele Webb.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <nav class="nav">
+    <a class="brand" href="index.html">Jua'nele Webb<span>.</span></a>
+    <ul>
+      <li><a class="link" href="index.html">About</a></li>
+      <li><a class="link" href="research.html" aria-current="page">Research</a></li>
+      <li><a class="link" href="mailto:juanelewebb@gmail.com">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="eyebrow">Boyce Thompson Institute REU · Summer 2026</div>
+  <h1>Engineering Drought Resilience Through Plant Architecture</h1>
+  <p class="meta">Jua'nele Webb, with Dr. Magdalena M. Julkowska · Plant Architecture Lab, Boyce Thompson Institute at Cornell University</p>
+
+  <section class="poster">
+    <a href="assets/research/poster-full.jpg"><img src="assets/research/poster-preview.jpg" alt="Research poster: Engineering Drought Resilience Through Plant Architecture" loading="lazy"></a>
+    <div>
+      <h2 style="margin-top:0">Abstract</h2>
+      <p>Drought is a major limit on crop productivity, but we still don't understand well how plant architecture relates to water-use efficiency (WUE). This project asked which shoot shapes help plants hold up under water limitation, using tepary bean (<em>Phaseolus acutifolius</em>) and soybean (<em>Glycine max</em>).</p>
+      <p>I compared stomatal conductance between the highest and lowest mature leaves, changed tepary architecture with hormones (paclobutrazol and IAA), and removed soybean shoot tips to force compact growth, all under well-watered and drought conditions. Measurements came from an SC-1 leaf porometer and the PhenoSight imaging platform (architecture, chlorophyll fluorescence, PSII efficiency).</p>
+      <p><strong>Preliminary results:</strong> compact and prostrate tepary plants did better under drought than erect ones. PAC made plants more compact and shifted water loss toward the highest mature leaves during drought.</p>
+      <div class="buttons">
+        <a class="btn primary" href="assets/research/poster.pdf">Poster (PDF)</a>
+        <a class="btn" href="assets/research/abstract.pdf">Abstract</a>
+        <a class="btn" href="assets/research/proposal.pdf">Research proposal</a>
+      </div>
+    </div>
+  </section>
+
+  <h2>Experiments &amp; analysis</h2>
+  <p>I analyzed every experiment in R (tidyverse, ggplot2, lme4, ANOVA and Tukey HSD). The cleaned R Markdown notebooks are linked below.</p>
+
+  <article class="exp">
+    <div class="eyebrow">Exp 01 · Soybean pilot</div>
+    <h3>Does leaf age change how much stomatal conductance drops under drought?</h3>
+    <p>A proof-of-concept run with one droughted and one watered soybean, measured across leaf positions. The pattern hinted that younger leaves keep higher conductance under drought, which set up the replicated tepary experiments.</p>
+    <p class="meta"><a href="research/notebooks/20260611_exp01_stomatal_conductance.Rmd">Notebook (.Rmd)</a></p>
+  </article>
+
+  <article class="exp">
+    <div class="eyebrow">Exp 02 · Tepary growth habit</div>
+    <h3>Developing leaves respond more strongly to drought than mature leaves</h3>
+    <p>Three-week-old erect and climbing tepary plants went through baseline, three days of withheld water, and recovery. I measured stomatal conductance at three leaf positions (M1–M3) and fit a regression for each date.</p>
+    <figure>
+      <img src="assets/research/fig-meristem-stage-plot.png" alt="Stomatal conductance by meristem leaf position across baseline, treatment and recovery days for erect and climber tepary plants" loading="lazy">
+      <figcaption>Stomatal conductance by leaf position (M1–M3) across experimental stages; erect (top) vs. climbing (bottom) plants.</figcaption>
+    </figure>
+    <p class="meta"><a href="research/notebooks/20260625_exp02_sc_tepary.Rmd">Notebook (.Rmd)</a></p>
+  </article>
+
+  <article class="exp">
+    <div class="eyebrow">Exp 03 · Hormone-mediated architecture</div>
+    <h3>PAC prevents climbing growth and shifts water loss toward young leaves during drought</h3>
+    <p>Tepary plants were sprayed with IAA (auxin), paclobutrazol (PAC, a gibberellin-synthesis inhibitor), or a mock control, then droughted. Under drought, PAC plants had significantly higher relative plasticity than IAA plants (one-way ANOVA p = 0.031, Tukey HSD). PAC kept the highest share of conductance in the youngest leaf (57.1% on average), while IAA shifted toward older leaves (48.1%).</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/research/fig-plasticity-plot.png" alt="Relative plasticity by hormone treatment under well-watered and drought conditions" loading="lazy">
+        <figcaption>Relative plasticity (young vs. old leaf conductance) by hormone treatment.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/research/fig-rgb-growthrate.png" alt="PhenoSight RGB growth rate by hormone treatment" loading="lazy">
+        <figcaption>PhenoSight growth rate by treatment (ANOVA p = 0.64).</figcaption>
+      </figure>
+    </div>
+    <p class="meta"><a href="research/notebooks/20260716_exp03_sc_hormone_tepary.Rmd">Notebook (.Rmd)</a></p>
+  </article>
+
+  <article class="exp">
+    <div class="eyebrow">Exp 04 · Soybean shoot-tip decapitation</div>
+    <h3>Compact soybeans showed lower conductance and better-maintained photosynthetic efficiency under drought</h3>
+    <p>Removing the shoot tip 21 days after planting produced compact plants, which I compared with intact (erect) controls. I tracked conductance at the highest and lowest mature leaves over three drought days and computed a Stress Tolerance Index (drought ÷ control) for each PhenoSight trait. Sample sizes were small, so treat these differences as suggestive.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/research/fig-trajectory-plot.png" alt="Stomatal conductance trajectories for erect and compact soybean" loading="lazy">
+        <figcaption>Mean stomatal conductance (± SE) by sampling day, architecture, and leaf position.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/research/fig-soybean-ps2-sti-per-trait.png" alt="Stress tolerance index per photosynthetic trait for compact vs erect soybean" loading="lazy">
+        <figcaption>Stress Tolerance Index for PSII and pigment traits; dashed line = control level.</figcaption>
+      </figure>
+    </div>
+    <p class="meta"><a href="research/notebooks/20260729_exp04_cut_soybeans.Rmd">Notebook (.Rmd)</a></p>
+  </article>
+
+  <h2>What's next</h2>
+  <ul class="clean">
+    <li><strong>Stem anatomy with machine learning:</strong> a segmentation model to measure tepary stem cross-sections (from Rapid Anatomy Tools imaging) across decapitation, hormone, and drought treatments.</li>
+    <li><strong>CPlantBox modeling:</strong> simulating radial and axial water transport through contrasting shoot and root architectures, with parameters drawn from PhenoSight data.</li>
+    <li><strong>Pipeline integration:</strong> linking anatomy, physiology, and imaging data per plant so anatomical traits map onto hydraulic model parameters.</li>
+  </ul>
+
+  <h2>Acknowledgements</h2>
+  <p>Thank you to Dr. Magda Julkowska and the Plant Architecture Lab, Megan Truesdail and Cristina McGuire, and the Boyce Thompson Institute REU Program. Supported by the NSF and USDA.</p>
+</main>
+
+<footer><div>© 2026 Jua'nele Webb · <a href="mailto:juanelewebb@gmail.com">juanelewebb@gmail.com</a> · <a href="https://github.com/juanelewebb-rgb">GitHub</a></div></footer>
+</body>
+</html>
