@@ -85,3 +85,10 @@ ul.clean li { margin-bottom: 6px; }
 
 footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
 footer div { max-width: 1040px; margin: 0 auto; padding: 24px 20px; }
+
+.story { max-width: 700px; }
+.story p { font-size: 18px; line-height: 1.75; margin-bottom: 20px; }
+.questions { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 700px) { .questions { grid-template-columns: 1fr; } }
+.card.question { border-left: 3px solid var(--lilac); }
+.card.question h3 { font-size: 18px; line-height: 1.35; margin-bottom: 10px; }
