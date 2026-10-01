@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #f7f6f2;
   --surface: #ffffff;
   --text: #1d2320;
@@ -7,17 +8,6 @@
   --accent-soft: #e3ece4;
   --border: #dcdfd9;
   --lilac: #b494e0;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121614;
-    --surface: #1b201d;
-    --text: #e6ebe7;
-    --muted: #9aa69f;
-    --accent: #8fc39b;
-    --accent-soft: #223127;
-    --border: #2d3530;
-  }
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
