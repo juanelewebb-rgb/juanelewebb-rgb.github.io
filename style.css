@@ -88,7 +88,11 @@ footer div { max-width: 1040px; margin: 0 auto; padding: 24px 20px; }
 
 .story { max-width: 700px; }
 .story p { font-size: 18px; line-height: 1.75; margin-bottom: 20px; }
-.questions { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 700px) { .questions { grid-template-columns: 1fr; } }
-.card.question { border-left: 3px solid var(--lilac); }
-.card.question h3 { font-size: 18px; line-height: 1.35; margin-bottom: 10px; }
+.qlist { list-style: none; margin: 8px 0 0; padding: 0; max-width: 760px; border-top: 1px solid var(--border); }
+.qlist li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 22px 0; border-bottom: 1px solid var(--border); }
+.qnum { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--lilac); padding-top: 5px; font-variant-numeric: tabular-nums; }
+.qlist .q { font-size: 20px; line-height: 1.45; margin: 0; letter-spacing: -0.005em; }
+.qlist .cite { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 8px 0 0; }
+.qlist .cite a { color: var(--muted); }
+.qlist .cite a:hover { color: var(--accent); }
+@media (max-width: 600px) { .qlist li { grid-template-columns: 32px minmax(0, 1fr); } .qlist .q { font-size: 18px; } }
