@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects · Jua'nele Webb</title>
+  <meta name="description" content="Projects by Jua'nele Webb: Project OSHN and a literature-data analysis of light-harvesting films for crops.">
+  <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+<header class="site">
+  <nav class="nav">
+    <a class="brand" href="index.html">Jua'nele Webb<span>.</span></a>
+    <ul>
+      <li><a class="link" href="index.html">About</a></li>
+      <li><a class="link" href="research.html">Research</a></li>
+      <li><a class="link" href="projects.html" aria-current="page">Projects</a></li>
+      <li><a class="link" href="mailto:juanelewebb@gmail.com">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <h1>Projects</h1>
+
+  <section class="story" aria-labelledby="oshn">
+    <div class="eyebrow">In progress</div>
+    <h2 id="oshn" style="margin-top:0">Project OSHN</h2>
+    <p>OSHN started because I wanted to make fresh food easier to get. My early designs leaned heavily on mechanical solutions. The more I developed them, the more complicated they got, and each version came with new concerns: water pressure, sanitation, maintenance, and how much energy the whole thing would use.</p>
+    <p>I started looking for ways to simplify it, and that's what eventually led me to materials. The question I'm working on now is whether the material surrounding the growing system could help generate energy without taking away the light the plants need.</p>
+  </section>
+
+  <section class="proj" aria-labelledby="films">
+    <div class="eyebrow">Current focus · analysis of published data</div>
+    <h2 id="films" style="margin-top:0">How much crop light does a light-harvesting film take?</h2>
+    <p class="lede" style="font-size:18px">While I was reading into that question, I came across Donglu Shi's 2025 review on transparent, spectrally selective photovoltaics. One idea in it stuck with me: porphyrin-based materials that could let through the wavelengths plants use and harvest other parts of sunlight for energy. It sounded promising, but I didn't want to stop there. I wanted to see what the existing materials actually do to plant-usable light, so I went back to the published data underneath the review.</p>
+
+    <h3 style="margin-top:28px">What I did</h3>
+    <ol class="steps">
+      <li><strong>I went back to the original study.</strong> The hybrid spectra in Shi's review come from Lin et al. (2022), so I read that paper's methods. Their samples were copper chlorophyllin and copper phthalocyanine, spin-coated into thin films. One thing I noticed along the way: in their Fig. 2, the panel letters appear swapped relative to the caption, so I used the panel whose spectra match the text.</li>
+      <li><strong>I pulled the values from the published figure.</strong> The raw spectral data weren't available, so I extracted the measured transmittance of each film from the plot itself. To check the extraction, I compared it to numbers the paper reports. My readings reproduce its visible transmittance (85% for the films, 90% for the blank film) within 2–3 points.</li>
+      <li><strong>I looked at the light from the plant's perspective.</strong> I weighted every wavelength by real sunlight (ASTM G173, AM1.5G) and split it into the light plants use for photosynthesis (PAR, 400–700 nm) and everything outside it (350–399 and 701–1000 nm). Then I compared each film to the blank film, so only the dye's effect counts.</li>
+    </ol>
+
+    <figure>
+      <img src="assets/projects/film_transmittance_par.png" alt="Transmittance of chlorophyllin, phthalocyanine and 1:3 hybrid films from 350 to 1000 nm, with the 400 to 700 nm PAR band shaded. The chlorophyllin film dips to about 47% near 405 nm, inside PAR; phthalocyanine-containing films dip near 630 nm, inside PAR, and near 725 nm." loading="lazy">
+      <figcaption>Measured film transmittance from Lin et al. (2022), Fig. 5b, re-plotted from extracted values. The shaded band is PAR. Three of the six films are shown; all six are in the table.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Film (chlorophyllin : phthalocyanine)</th>
+            <th>Plant light blocked</th>
+            <th>Other light captured</th>
+            <th>Share of absorbed light that plants use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1 : 0 (chlorophyllin only)</td><td>13%</td><td>5%</td><td>71%</td></tr>
+          <tr><td>1 : 0.5</td><td>11%</td><td>6%</td><td>65%</td></tr>
+          <tr><td>1 : 1</td><td>9%</td><td>4%</td><td>68%</td></tr>
+          <tr><td>1 : 2</td><td>8%</td><td>4%</td><td>67%</td></tr>
+          <tr><td>1 : 3</td><td>9%</td><td>5%</td><td>66%</td></tr>
+          <tr><td>0 : 1 (phthalocyanine only)</td><td>4%</td><td>2%</td><td>71%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">"Plant light blocked" is the share of sunlight's PAR photons the dye removes. "Other light captured" is the share of photons outside PAR it absorbs. The last column is how much of everything the dye absorbs falls inside PAR.</p>
+
+    <div class="finding">
+      <p><strong>What I found.</strong> The tradeoff was bigger than I expected. In every film, roughly two-thirds of the light the dye absorbs is light plants use. Chlorophyllin's strongest absorption is in the blue, and phthalocyanine has a strong band around 630 nm in the red. Both of those sit inside PAR.</p>
+      <p>Lin et al. developed these films for transparent windows and heat generation, not for crops, and I'm working from their published measurements, not films I made or tested myself. For OSHN, these particular films don't solve the problem yet. The material I'm looking for would need to move more of its absorption outside 400–700 nm, below 400 nm or above 700 nm, and leave more of the plant-usable light alone.</p>
+    </div>
+
+    <h3>What's next</h3>
+    <p>That result gave me my next question: can a hybrid's absorption be predicted from the absorption of its two ingredients? If it can, I can use that relationship to screen other porphyrins and phthalocyanines for combinations that absorb further into the far-red and near-infrared and leave more PAR for the plants. That's the next thing I'm testing.</p>
+
+    <h3>Limits</h3>
+    <ul class="clean small">
+      <li>Values were read from a published figure, not raw data (about ±0.5 percentage points of transmittance).</li>
+      <li>Covers 350–1000 nm. Below 350 nm the glass itself absorbs.</li>
+      <li>Absorbing light is not the same as producing electricity; nothing here estimates power output.</li>
+      <li>The films absorb only a little light overall, so reading errors matter most for the weakest absorber (0 : 1).</li>
+    </ul>
+
+    <h3>Sources</h3>
+    <ul class="clean small">
+      <li>Shi, D. "Three-Dimensional Solar Harvesting with Transparent Spectral Selective Photovoltaics in Agrivoltaics." <em>Energies</em> 18, 1788 (2025). <a href="https://doi.org/10.3390/en18071788">doi:10.3390/en18071788</a></li>
+      <li>Lin, J.; Wang, Y.; Lyu, M.; Deng, Z.; Shi, D. "Transparent porphyrin-based hybrid films for spectral selective solar harvesting and energy generation." <em>Sol. Energy Mater. Sol. Cells</em> 243, 111788 (2022). <a href="https://doi.org/10.1016/j.solmat.2022.111788">doi:10.1016/j.solmat.2022.111788</a></li>
+      <li>McCree, K. J. "The action spectrum, absorptance and quantum yield of photosynthesis in crop plants." <em>Agricultural Meteorology</em> 9, 191–216 (1972).</li>
+      <li>ASTM G173-03 reference solar spectrum (AM1.5 global).</li>
+      <li>Anthropic. Claude [AI assistant] (2026). <a href="https://claude.ai">claude.ai</a>. Used to help extract values from the published figure, write the analysis code and the figure, and edit the wording on this page.</li>
+    </ul>
+  </section>
+</main>
+
+<footer><div>© 2026 Jua'nele Webb · <a href="mailto:juanelewebb@gmail.com">juanelewebb@gmail.com</a> · <a href="https://github.com/juanelewebb-rgb">GitHub</a></div></footer>
+</body>
+</html>
