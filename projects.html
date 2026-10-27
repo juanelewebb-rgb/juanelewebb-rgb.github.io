@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Projects · Jua'nele Webb</title>
-  <meta name="description" content="Projects by Jua'nele Webb: Project OSHN and a literature-data analysis of light-harvesting films for crops.">
+  <meta name="description" content="Projects by Jua'nele Webb: Project OSHN, a literature-data analysis of light-harvesting films for crops, and a 3D reconstruction pipeline built from photos.">
   <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
@@ -93,6 +93,15 @@
       <li>ASTM G173-03 reference solar spectrum (AM1.5 global).</li>
       <li>Anthropic. Claude [AI assistant] (2026). <a href="https://claude.ai">claude.ai</a>. Used to help extract values from the published figure, write the analysis code and the figure, and edit the wording on this page.</li>
     </ul>
+  </section>
+
+  <section class="story" aria-labelledby="recon3d">
+    <div class="eyebrow">Computer vision · in progress</div>
+    <h2 id="recon3d" style="margin-top:0">3D reconstruction from photos</h2>
+    <p>I wanted to understand how a pile of ordinary photos turns into a 3D model, so I built the pipeline myself. I followed a seminar by Dr. Suxing Liu. The code finds features in each photo and matches them across photos. Then it works out where the camera was for each shot, builds up a point cloud, turns that into a surface, cleans it up, and paints it with color from the photos. Each step is its own short Python file, and there's a notebook that runs them one at a time and shows you what happened.</p>
+    <p>To test it, I made fake photos of a textured cube from 36 known camera spots. It found all 36 cameras and landed within 1% of where they really were. I've also run it on the sample photos Dr. Liu gave me, and next I'm shooting my own photo sets to reconstruct.</p>
+    <p>Code, docs and notebooks are in <a href="https://github.com/juanelewebb-rgb/juanelewebb-rgb.github.io/tree/main/projects/3d-reconstruction">projects/3d-reconstruction</a> on GitHub.</p>
+    <p class="small">Claude helped me write the code and edit this description.</p>
   </section>
 </main>
 
