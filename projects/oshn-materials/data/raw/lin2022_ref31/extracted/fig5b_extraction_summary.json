@@ -1,0 +1,30 @@
+{
+ "1-0": {
+  "columns_found_pct": 89.5,
+  "grid_points_interpolated_pct": 7.1
+ },
+ "1-0.5": {
+  "columns_found_pct": 42.7,
+  "grid_points_interpolated_pct": 52.1
+ },
+ "1-1": {
+  "columns_found_pct": 53.7,
+  "grid_points_interpolated_pct": 40.8
+ },
+ "1-2": {
+  "columns_found_pct": 72.4,
+  "grid_points_interpolated_pct": 19.6
+ },
+ "1-3": {
+  "columns_found_pct": 96.9,
+  "grid_points_interpolated_pct": 2.9
+ },
+ "0-1": {
+  "columns_found_pct": 83.8,
+  "grid_points_interpolated_pct": 13.6
+ },
+ "control": {
+  "columns_found_pct": 98.6,
+  "grid_points_interpolated_pct": 0.5
+ }
+}

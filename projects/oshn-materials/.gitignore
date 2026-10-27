@@ -1,0 +1,6 @@
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+*.pyc
+papers/
+data/raw/lin2022_ref31/source_images/

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recon3d"
+version = "0.1.0"
+description = "3D reconstruction from 2D images: SIFT -> matching -> SfM -> dense cloud -> Poisson mesh -> texture"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.24", "opencv-python>=4.8", "open3d>=0.18", "scipy>=1.10", "pillow>=10.0", "matplotlib>=3.7", "imageio-ffmpeg>=0.4.9"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

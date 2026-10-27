@@ -1,0 +1,7 @@
+numpy>=1.26
+pandas
+scipy
+matplotlib
+pytest
+jupyterlab
+pillow

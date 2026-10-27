@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "recon3d: check photos",
+      "type": "debugpy", "request": "launch", "module": "recon3d",
+      "args": ["check", "data/images"], "env": { "PYTHONPATH": "${workspaceFolder}/src" }
+    },
+    {
+      "name": "recon3d: run on data/images",
+      "type": "debugpy", "request": "launch", "module": "recon3d",
+      "args": ["run", "data/images", "--out", "output/run1"], "env": { "PYTHONPATH": "${workspaceFolder}/src" }
+    },
+    {
+      "name": "recon3d: run on synthetic test set",
+      "type": "debugpy", "request": "launch", "module": "recon3d",
+      "args": ["run", "data/synthetic", "--out", "output/synthetic_run", "--window", "6"],
+      "env": { "PYTHONPATH": "${workspaceFolder}/src" }
+    }
+  ]
+}

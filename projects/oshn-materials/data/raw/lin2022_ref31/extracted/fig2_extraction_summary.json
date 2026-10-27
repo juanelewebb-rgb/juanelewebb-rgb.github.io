@@ -1,0 +1,26 @@
+{
+ "1-0": {
+  "columns_found_pct": 99.0,
+  "grid_points_interpolated_pct": 0.4
+ },
+ "1-0.5": {
+  "columns_found_pct": 98.3,
+  "grid_points_interpolated_pct": 0.8
+ },
+ "1-1": {
+  "columns_found_pct": 99.4,
+  "grid_points_interpolated_pct": 0.0
+ },
+ "1-2": {
+  "columns_found_pct": 94.7,
+  "grid_points_interpolated_pct": 2.3
+ },
+ "1-3": {
+  "columns_found_pct": 100.0,
+  "grid_points_interpolated_pct": 0.0
+ },
+ "0-1": {
+  "columns_found_pct": 100.0,
+  "grid_points_interpolated_pct": 0.0
+ }
+}

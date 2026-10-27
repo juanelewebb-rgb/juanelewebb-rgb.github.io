@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+.ipynb_checkpoints/
+# your photos and generated results are large - keep them out of git
+data/images/*
+!data/images/.gitkeep
+output/*
+!output/.gitkeep
+*.zip
+*.mp4
+
+# regenerate with: python -m recon3d synthetic data/synthetic
+data/synthetic/
+
+# professor's sample dataset - not ours to publish
+data/styrac/
