@@ -99,3 +99,10 @@ footer div { max-width: 1040px; margin: 0 auto; padding: 24px 20px; }
 .finding p:last-child { margin-bottom: 0; }
 .small { font-size: 14px; color: var(--muted); }
 ol.steps { padding-left: 22px; } ol.steps li { margin-bottom: 8px; }
+
+/* 3D reconstruction figures on the Projects page */
+.recon-figs { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin: 22px 0 6px; }
+.recon-figs figure { margin: 0; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.recon-figs figure.wide { grid-column: 1 / -1; }
+.recon-figs img { display: block; width: 100%; height: auto; }
+.recon-figs figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
