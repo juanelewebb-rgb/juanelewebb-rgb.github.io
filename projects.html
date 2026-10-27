@@ -100,23 +100,23 @@
     <h2 id="recon3d" style="margin-top:0">3D reconstruction from photos</h2>
     <p>I wanted to understand how a pile of ordinary photos turns into a 3D model, so I built the pipeline myself. I followed a seminar by Dr. Suxing Liu. The code finds features in each photo and matches them across photos. Then it works out where the camera was for each shot, builds up a point cloud, turns that into a surface, cleans it up, and paints it with color from the photos. Each step is its own short Python file, and there's a notebook that runs through each stage and shows you what happened.</p>
     <p>To test it, I made fake photos of a textured cube from 36 known camera spots. It found all 36 cameras and landed within 1% of where they really were. I've also run it on the sample photos Dr. Liu gave me, and next I'm shooting my own photo sets to reconstruct.</p>
-    <p class="small">Here's what the cube test looks like at four of the stages. Every image below is from the fake-photo test, not real photos.</p>
+    <p class="small">Here's what the cube test looks like at four of the stages, in order from 1 to 4. Every image below is from the fake-photo test, not real photos.</p>
     <div class="recon-figs">
       <figure>
         <img src="assets/projects/recon3d-1-matches.jpg" alt="Two views of a textured cube on a floor with colored lines connecting matching points between them. The top pair shows all raw matches, including a few crossing lines that are wrong; the bottom pair shows only the verified matches, which run almost parallel." loading="lazy">
-        <figcaption><strong>Matching.</strong> The same cube in two photos. Top: every match the code first found. Bottom: the ones that survived a geometry check.</figcaption>
+        <figcaption><strong>1. Matching.</strong> The same cube in two photos. Top: every match the code first found. Bottom: the ones that survived a geometry check.</figcaption>
       </figure>
       <figure>
         <img src="assets/projects/recon3d-2-cameras.jpg" alt="Two 3D plots showing red triangles for the 36 recovered camera positions arranged in a ring around a small cloud of colored points shaped like the cube." loading="lazy">
-        <figcaption><strong>Camera positions.</strong> Where the code worked out each of the 36 cameras was (red), along with the first sparse set of 3D points.</figcaption>
+        <figcaption><strong>2. Camera positions.</strong> Where the code worked out each of the 36 cameras was (red), along with the first sparse set of 3D points.</figcaption>
       </figure>
       <figure>
         <img src="assets/projects/recon3d-3-dense.jpg" alt="Two 3D plots of a dense colored point cloud showing a tall box standing on a textured floor." loading="lazy">
-        <figcaption><strong>Dense point cloud.</strong> About 349,000 points once it compared neighboring photos, up from about 12,900.</figcaption>
+        <figcaption><strong>3. Dense point cloud.</strong> About 349,000 points once it compared neighboring photos, up from about 12,900.</figcaption>
       </figure>
       <figure class="wide">
         <img src="assets/projects/recon3d-4-model.jpg" alt="The final colored 3D model of the cube standing on a floor, shown from four angles." loading="lazy">
-        <figcaption><strong>Final model.</strong> The surface, colored from the photos, seen from four angles.</figcaption>
+        <figcaption><strong>4. Final model.</strong> The surface, colored from the photos, seen from four angles.</figcaption>
       </figure>
     </div>
     <p>Code, docs and notebooks are in <a href="https://github.com/juanelewebb-rgb/juanelewebb-rgb.github.io/tree/main/projects/3d-reconstruction">projects/3d-reconstruction</a> on GitHub.</p>
