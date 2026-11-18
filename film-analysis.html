@@ -30,17 +30,57 @@
     <h1 id="films">How much crop light does a light-harvesting film take?</h1>
     <p class="lede" style="font-size:18px">Plants only use part of sunlight, mostly the wavelengths from 400 to 700 nanometers. That band is called PAR, short for photosynthetically active radiation. Donglu Shi's 2025 review describes transparent films that could let that light through to plants while absorbing other wavelengths to make energy, which is just what OSHN needs. One idea in it caught my attention: porphyrin-based materials, dye-like molecules in the same family as chlorophyll. It sounded promising, but I wanted to know what the existing ones really do to plant light, so I went back to the data underneath the review.</p>
 
+    <p>One thing makes this analysis necessary. The paper adjusted all of its films to the same 85% clarity to the human eye, which it calls average visible transmittance. To us the films look equally clear, but plants don't see the way we do, and the dyes take different amounts of the light plants need.</p>
+
+    <div class="guide">
+      <h3>The words you'll see</h3>
+      <dl class="terms">
+        <dt>Wavelength</dt>
+        <dd>The color of light, measured in nanometers (nm). Blue is around 450 nm, green around 550 and red around 650. Below 400 is ultraviolet, and above 700 is far-red, which we can barely see.</dd>
+        <dt>PAR</dt>
+        <dd>The light plants use, from 400 to 700 nm. That's roughly the rainbow we see, and it's where photosynthesis works best. Scientists call it photosynthetically active radiation.</dd>
+        <dt>Photon</dt>
+        <dd>A particle of light. Plants run on the number of photons they receive, and not on how bright the light looks to us, so I counted photons.</dd>
+        <dt>Chlorophyllin and phthalocyanine</dt>
+        <dd>Two dyes used in the films. Chlorophyllin is a green dye made from the pigment that makes leaves green. Phthalocyanine is a blue dye from the same family. A ratio like 1:3 is the mix, one part chlorophyllin to three parts phthalocyanine.</dd>
+        <dt>Blank film</dt>
+        <dd>The same plastic coating with no dye. Glass and plastic also stop a little light, so comparing each film to the blank one leaves only the dye's effect.</dd>
+      </dl>
+    </div>
+
     <h3 style="margin-top:28px">What I did</h3>
     <ol class="steps">
       <li><strong>I went back to the original study.</strong> The hybrid spectra in Shi's review come from Lin et al. (2022), so I read that paper's methods. Their samples were copper chlorophyllin and copper phthalocyanine, spin-coated into thin films. One thing I noticed along the way: in their Fig. 2, the panel letters appear swapped relative to the caption, so I used the panel whose spectra match the text.</li>
       <li><strong>I pulled the values from the published figure.</strong> The raw spectral data weren't available, so I extracted the measured transmittance of each film from the plot itself. To check the extraction, I compared it to numbers the paper reports. My readings reproduce its visible transmittance (85% for the films, 90% for the blank film) within 2–3 points.</li>
-      <li><strong>I looked at the light from the plant's perspective.</strong> I weighted every wavelength by real sunlight (ASTM G173, AM1.5G) and split it into the light plants use for photosynthesis (PAR, 400–700 nm) and everything outside it (350–399 and 701–1000 nm). Then I compared each film to the blank film, so only the dye's effect counts.</li>
+      <li><strong>I looked at the light from the plant's perspective.</strong> Sunlight isn't equally strong at every color, so I counted each color by how much sunlight actually has of it, using a standard reference spectrum (ASTM G173, AM1.5G). I split the light into what plants use for photosynthesis (PAR, 400–700 nm) and everything outside it (350–399 and 701–1000 nm). Then I compared each film to the blank film, so only the dye's effect counts.</li>
     </ol>
+
+    <div class="guide">
+      <h3>How to read this graph</h3>
+      <ul class="clean">
+        <li><strong>Across the bottom</strong> is the color of the light, as a wavelength in nanometers. The shaded band, 400 to 700 nm, is the light plants use.</li>
+        <li><strong>Up the side</strong> is how much light passes through the film. 100% would be perfectly clear.</li>
+        <li><strong>The dashed gray line</strong> is the blank film with no dye. It's the baseline.</li>
+        <li><strong>Each colored line</strong> is a film with dye. Wherever it dips below the gray line, the dye is absorbing that color.</li>
+        <li><strong>What to look for:</strong> dips inside the shaded band take light plants need.</li>
+      </ul>
+    </div>
 
     <figure>
       <img src="assets/projects/film_transmittance_par.png" alt="Transmittance of chlorophyllin, phthalocyanine and 1:3 hybrid films from 350 to 1000 nm, with the 400 to 700 nm PAR band shaded. The chlorophyllin film dips to about 47% near 405 nm, inside PAR; phthalocyanine-containing films dip near 630 nm, inside PAR, and near 725 nm." loading="lazy">
-      <figcaption>Measured film transmittance from Lin et al. (2022), Fig. 5b, re-plotted from extracted values. The shaded band is PAR. Three of the six films are shown; all six are in the table.</figcaption>
+      <figcaption>Light passing through three of the six films, from Lin et al. (2022), Fig. 5b. I re-plotted values I read off their figure. The chlorophyllin-only film (blue) has its biggest dip, down to about 47%, near 405 nm in the blue light plants use. The phthalocyanine films dip near 630 nm (red), also inside the band, and near 725 nm, just outside it. All six films are in the table below.</figcaption>
     </figure>
+
+    <div class="guide">
+      <h3>How to read this table</h3>
+      <p>Each row is one film, compared against the blank film so only the dye's effect counts. The percentages count photons, the particles of light, because that's what plants use.</p>
+      <ul class="clean">
+        <li><strong>Plant light blocked:</strong> of the sunlight in the 400 to 700 nm band, how much the film stops from reaching the plants. Lower is better for the plants.</li>
+        <li><strong>Other light captured:</strong> of the sunlight outside that band, how much the film absorbs. This is the light that could be harvested for energy at no cost to the plants. Higher is better for energy.</li>
+        <li><strong>Share of absorbed light that plants use:</strong> of everything the dye absorbs, the part that falls inside the plant band. A good film would have a low number here. These are about two-thirds, which is why these films don't solve the problem yet.</li>
+      </ul>
+      <p>For example, the chlorophyllin-only film blocks 13% of plant light and captures 5% of the other light, and 71% of what it absorbs is light the plants would have used. For scale, that film blocks about three times as much plant light as the phthalocyanine-only film (13% vs 4%), so the dye mix matters a lot.</p>
+    </div>
 
     <div class="table-wrap">
       <table class="data-table">
@@ -62,7 +102,7 @@
         </tbody>
       </table>
     </div>
-    <p class="small">"Plant light blocked" is the share of sunlight's PAR photons the dye removes. "Other light captured" is the share of photons outside PAR it absorbs. The last column is how much of everything the dye absorbs falls inside PAR.</p>
+    <p class="small">Absorbing light is not the same as making electricity. These numbers say how much light a dye takes, not how much power a device could produce.</p>
 
     <div class="finding">
       <p><strong>What I found.</strong> The tradeoff was bigger than I expected. In every film, roughly two-thirds of the light the dye absorbs is light plants use. Chlorophyllin's strongest absorption is in the blue, and phthalocyanine has a strong band around 630 nm in the red. Both of those sit inside PAR.</p>
@@ -74,6 +114,7 @@
       <li>Values were read from a published figure, not raw data (about ±0.5 percentage points of transmittance).</li>
       <li>Covers 350–1000 nm. Below 350 nm the glass itself absorbs.</li>
       <li>Absorbing light is not the same as producing electricity; nothing here estimates power output.</li>
+      <li>I don't know how much light loss a crop can tolerate, so these numbers show how the films compare, not whether any of them would harm a crop.</li>
       <li>The films absorb only a little light overall, so reading errors matter most for the weakest absorber (0 : 1).</li>
     </ul>
 
