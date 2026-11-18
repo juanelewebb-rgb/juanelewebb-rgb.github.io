@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Projects · Jua'nele Webb</title>
-  <meta name="description" content="Projects by Jua'nele Webb: Project OSHN, a literature-data analysis of light-harvesting films for crops, and a 3D reconstruction pipeline built from photos.">
+  <meta name="description" content="Projects by Jua'nele Webb: Project OSHN, a film analysis for crop light, a 3D reconstruction pipeline, and hydroponic design iterations.">
   <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
@@ -21,116 +21,36 @@
 </header>
 
 <main>
+  <div class="eyebrow">What I'm building and analyzing</div>
   <h1>Projects</h1>
+  <p class="lede">From a growing system, to the materials question it raised, to a pipeline that turns photos into 3D models.</p>
 
-  <section class="story" aria-labelledby="oshn">
-    <div class="eyebrow">In progress</div>
-    <h2 id="oshn" style="margin-top:0">Project OSHN</h2>
-    <p>OSHN started because I wanted to make fresh food easier to get. My early designs leaned heavily on mechanical solutions. The more I developed them, the more complicated they got, and each version came with new concerns: water pressure, sanitation, maintenance, and how much energy the whole thing would use.</p>
-    <p>I started looking for ways to simplify it, and that's what eventually led me to materials. The question I'm working on now is whether the material surrounding the growing system could help generate energy without taking away the light the plants need.</p>
-  </section>
-
-  <section class="story" aria-labelledby="whymaterials">
-    <div class="eyebrow">How the research connects</div>
-    <h2 id="whymaterials" style="margin-top:0">Why I went looking for new materials</h2>
-    <p>I design low-energy growing systems, first for OSHN and then the Hydro-Zinnia Garden for the Dunwoody Engineering Club competition. Along the way I ran into a problem that redrawing the design doesn't fix: microbes growing in the nutrient water.</p>
-    <p>I tested it for my <a href="assets/research/honors-microbiology-lab-report-spring-2026.pdf">honors microbiology lab report</a> (PDF). I grew corn and mung bean seedlings in 12 jars of still, non-aerated water, half at room temperature and half at 37°C. The warmer jars had more bacteria.</p>
-    <p>That told me I couldn't solve this by adjusting the same designs. I needed a more creative approach, and it led me to Donglu Shi's work on materials that handle sunlight selectively.</p>
-    <p><a href="https://juanele-webb-research.my.canva.site/">My first research website has the designs and my earlier research →</a></p>
-  </section>
-
-  <section class="proj" aria-labelledby="films">
-    <div class="eyebrow">Current focus · analysis of published data</div>
-    <h2 id="films" style="margin-top:0">How much crop light does a light-harvesting film take?</h2>
-    <p class="lede" style="font-size:18px">While I was reading into that question, I came across Donglu Shi's 2025 review on transparent, spectrally selective photovoltaics. One idea in it stuck with me: porphyrin-based materials that could let through the wavelengths plants use and harvest other parts of sunlight for energy. It sounded promising, but I didn't want to stop there. I wanted to see what the existing materials actually do to plant-usable light, so I went back to the published data underneath the review.</p>
-
-    <h3 style="margin-top:28px">What I did</h3>
-    <ol class="steps">
-      <li><strong>I went back to the original study.</strong> The hybrid spectra in Shi's review come from Lin et al. (2022), so I read that paper's methods. Their samples were copper chlorophyllin and copper phthalocyanine, spin-coated into thin films. One thing I noticed along the way: in their Fig. 2, the panel letters appear swapped relative to the caption, so I used the panel whose spectra match the text.</li>
-      <li><strong>I pulled the values from the published figure.</strong> The raw spectral data weren't available, so I extracted the measured transmittance of each film from the plot itself. To check the extraction, I compared it to numbers the paper reports. My readings reproduce its visible transmittance (85% for the films, 90% for the blank film) within 2–3 points.</li>
-      <li><strong>I looked at the light from the plant's perspective.</strong> I weighted every wavelength by real sunlight (ASTM G173, AM1.5G) and split it into the light plants use for photosynthesis (PAR, 400–700 nm) and everything outside it (350–399 and 701–1000 nm). Then I compared each film to the blank film, so only the dye's effect counts.</li>
-    </ol>
-
-    <figure>
-      <img src="assets/projects/film_transmittance_par.png" alt="Transmittance of chlorophyllin, phthalocyanine and 1:3 hybrid films from 350 to 1000 nm, with the 400 to 700 nm PAR band shaded. The chlorophyllin film dips to about 47% near 405 nm, inside PAR; phthalocyanine-containing films dip near 630 nm, inside PAR, and near 725 nm." loading="lazy">
-      <figcaption>Measured film transmittance from Lin et al. (2022), Fig. 5b, re-plotted from extracted values. The shaded band is PAR. Three of the six films are shown; all six are in the table.</figcaption>
-    </figure>
-
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Film (chlorophyllin : phthalocyanine)</th>
-            <th>Plant light blocked</th>
-            <th>Other light captured</th>
-            <th>Share of absorbed light that plants use</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>1 : 0 (chlorophyllin only)</td><td>13%</td><td>5%</td><td>71%</td></tr>
-          <tr><td>1 : 0.5</td><td>11%</td><td>6%</td><td>65%</td></tr>
-          <tr><td>1 : 1</td><td>9%</td><td>4%</td><td>68%</td></tr>
-          <tr><td>1 : 2</td><td>8%</td><td>4%</td><td>67%</td></tr>
-          <tr><td>1 : 3</td><td>9%</td><td>5%</td><td>66%</td></tr>
-          <tr><td>0 : 1 (phthalocyanine only)</td><td>4%</td><td>2%</td><td>71%</td></tr>
-        </tbody>
-      </table>
+  <div class="grid" style="margin-top:28px">
+    <div class="card">
+      <div class="tags"><span class="tag">In progress</span><span class="tag">Materials</span><span class="tag">OSHN</span></div>
+      <h3>Project OSHN</h3>
+      <p>The growing system I've been designing, and the materials question it led me to: whether a light-harvesting film can generate energy without taking the light plants need.</p>
+      <a class="more" href="oshn.html">The OSHN story →</a>
     </div>
-    <p class="small">"Plant light blocked" is the share of sunlight's PAR photons the dye removes. "Other light captured" is the share of photons outside PAR it absorbs. The last column is how much of everything the dye absorbs falls inside PAR.</p>
-
-    <div class="finding">
-      <p><strong>What I found.</strong> The tradeoff was bigger than I expected. In every film, roughly two-thirds of the light the dye absorbs is light plants use. Chlorophyllin's strongest absorption is in the blue, and phthalocyanine has a strong band around 630 nm in the red. Both of those sit inside PAR.</p>
-      <p>Lin et al. developed these films for transparent windows and heat generation, not for crops, and I'm working from their published measurements, not films I made or tested myself. For OSHN, these particular films don't solve the problem yet. The material I'm looking for would need to move more of its absorption outside 400–700 nm, below 400 nm or above 700 nm, and leave more of the plant-usable light alone.</p>
+    <div class="card">
+      <div class="tags"><span class="tag">Analysis</span><span class="tag">Materials</span><span class="tag">Published data</span></div>
+      <h3>How much crop light does a film take?</h3>
+      <p>I went back to the published data behind a porphyrin-based film and asked what it does to the light plants use. About two-thirds of the light the dye absorbs is plant light.</p>
+      <a class="more" href="film-analysis.html">The film analysis →</a>
     </div>
-
-    <h3>What's next</h3>
-    <p>That result gave me my next question: can a hybrid's absorption be predicted from the absorption of its two ingredients? If it can, I can use that relationship to screen other porphyrins and phthalocyanines for combinations that absorb further into the far-red and near-infrared and leave more PAR for the plants. That's the next thing I'm testing.</p>
-
-    <h3>Limits</h3>
-    <ul class="clean small">
-      <li>Values were read from a published figure, not raw data (about ±0.5 percentage points of transmittance).</li>
-      <li>Covers 350–1000 nm. Below 350 nm the glass itself absorbs.</li>
-      <li>Absorbing light is not the same as producing electricity; nothing here estimates power output.</li>
-      <li>The films absorb only a little light overall, so reading errors matter most for the weakest absorber (0 : 1).</li>
-    </ul>
-
-    <h3>Sources</h3>
-    <ul class="clean small">
-      <li>Shi, D. "Three-Dimensional Solar Harvesting with Transparent Spectral Selective Photovoltaics in Agrivoltaics." <em>Energies</em> 18, 1788 (2025). <a href="https://doi.org/10.3390/en18071788">doi:10.3390/en18071788</a></li>
-      <li>Lin, J.; Wang, Y.; Lyu, M.; Deng, Z.; Shi, D. "Transparent porphyrin-based hybrid films for spectral selective solar harvesting and energy generation." <em>Sol. Energy Mater. Sol. Cells</em> 243, 111788 (2022). <a href="https://doi.org/10.1016/j.solmat.2022.111788">doi:10.1016/j.solmat.2022.111788</a></li>
-      <li>McCree, K. J. "The action spectrum, absorptance and quantum yield of photosynthesis in crop plants." <em>Agricultural Meteorology</em> 9, 191–216 (1972).</li>
-      <li>ASTM G173-03 reference solar spectrum (AM1.5 global).</li>
-      <li>Anthropic. Claude [AI assistant] (2026). <a href="https://claude.ai">claude.ai</a>. Used to help extract values from the published figure, write the analysis code and the figure, and edit the wording on this page.</li>
-    </ul>
-  </section>
-
-  <section class="story" aria-labelledby="recon3d">
-    <div class="eyebrow">Computer vision · in progress</div>
-    <h2 id="recon3d" style="margin-top:0">3D reconstruction from photos</h2>
-    <p>I wanted to understand how a pile of ordinary photos turns into a 3D model, so I built the pipeline myself. I followed a seminar by Dr. Suxing Liu. The code finds features in each photo and matches them across photos. Then it works out where the camera was for each shot, builds up a point cloud, turns that into a surface, cleans it up, and paints it with color from the photos. Each step is its own short Python file, and there's a notebook that runs through each stage and shows you what happened.</p>
-    <p>To test it, I made fake photos of a textured cube from 36 known camera spots. It found all 36 cameras and landed within 1% of where they really were. I've also run it on the sample photos Dr. Liu gave me, and next I'm shooting my own photo sets to reconstruct.</p>
-    <p class="small">Here's what the cube test looks like at four of the stages, in order from 1 to 4. Every image below is from the fake-photo test, not real photos.</p>
-    <div class="recon-figs">
-      <figure>
-        <img src="assets/projects/recon3d-1-matches.jpg" alt="Two views of a textured cube on a floor with colored lines connecting matching points between them. The top pair shows all raw matches, including a few crossing lines that are wrong; the bottom pair shows only the verified matches, which run almost parallel." loading="lazy">
-        <figcaption><strong>1. Matching.</strong> The same cube in two photos. Top: every match the code first found. Bottom: the ones that survived a geometry check.</figcaption>
-      </figure>
-      <figure>
-        <img src="assets/projects/recon3d-2-cameras.jpg" alt="Two 3D plots showing red triangles for the 36 recovered camera positions arranged in a ring around a small cloud of colored points shaped like the cube." loading="lazy">
-        <figcaption><strong>2. Camera positions.</strong> Where the code worked out each of the 36 cameras was (red), along with the first sparse set of 3D points.</figcaption>
-      </figure>
-      <figure>
-        <img src="assets/projects/recon3d-3-dense.jpg" alt="Two 3D plots of a dense colored point cloud showing a tall box standing on a textured floor." loading="lazy">
-        <figcaption><strong>3. Dense point cloud.</strong> About 349,000 points once it compared neighboring photos, up from about 12,900.</figcaption>
-      </figure>
-      <figure class="wide">
-        <img src="assets/projects/recon3d-4-model.jpg" alt="The final colored 3D model of the cube standing on a floor, shown from four angles." loading="lazy">
-        <figcaption><strong>4. Final model.</strong> The surface, colored from the photos, seen from four angles.</figcaption>
-      </figure>
+    <div class="card">
+      <div class="tags"><span class="tag">In progress</span><span class="tag">Computer vision</span><span class="tag">Python</span></div>
+      <h3>3D reconstruction from photos</h3>
+      <p>A pipeline I built to turn ordinary photos into a 3D model, with the stages defined. I tested it on fake photos of a cube, and I'm moving on to real photo sets, including my own shoots.</p>
+      <a class="more" href="recon3d.html">How the pipeline works →</a>
     </div>
-    <p>Code, docs and notebooks are in <a href="https://github.com/juanelewebb-rgb/juanelewebb-rgb.github.io/tree/main/projects/3d-reconstruction">projects/3d-reconstruction</a> on GitHub.</p>
-    <p class="small">Claude helped me write the code and edit this description.</p>
-  </section>
+    <div class="card">
+      <div class="tags"><span class="tag">Design</span><span class="tag">Hydroponics</span><span class="tag">CEA</span></div>
+      <h3>Hydroponic design iterations</h3>
+      <p>Low-energy hydroponic designs, from my first iterations to the Hydro-Zinnia Garden for the Dunwoody Engineering Club design and build competition.</p>
+      <a class="more" href="https://juanele-webb-research.my.canva.site/">On my research site →</a>
+    </div>
+  </div>
 </main>
 
 <footer><div>© 2026 Jua'nele Webb · <a href="mailto:juanelewebb@gmail.com">juanelewebb@gmail.com</a> · <a href="https://github.com/juanelewebb-rgb">GitHub</a></div></footer>
